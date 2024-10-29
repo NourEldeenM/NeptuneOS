@@ -27,6 +27,15 @@ public class driverProgram {
             case "mv":
                 cmd.mv(tokens);
                 break;
+            case "pwd":
+                cmd.pwd(tokens);
+                break;
+            case "rmdir":
+                cmd.rmdir(tokens);
+                break;
+            case "rm":
+                cmd.rm(tokens);
+                break;
 //            case ">":
 //                cmd.forwardArrow(tokens);
 //                break;
