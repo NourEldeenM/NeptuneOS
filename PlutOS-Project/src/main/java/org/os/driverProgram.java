@@ -28,13 +28,13 @@ public class driverProgram {
                 cmd.mv(tokens);
                 break;
             case "pwd":
-                cmd.pwd(tokens);
+                System.out.println(cmd.pwd(tokens));
                 break;
             case "rmdir":
-                cmd.rmdir(tokens);
+                System.out.println(cmd.rmdir(tokens));
                 break;
             case "rm":
-                cmd.rm(tokens);
+                System.out.println(cmd.rm(tokens));
                 break;
 //            case ">":
 //                cmd.forwardArrow(tokens);
