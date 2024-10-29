@@ -1,0 +1,42 @@
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# Maven directories
+target/
+*.jar
+*.war
+*.ear
+
+# Gradle directories
+.gradle/
+build/
+out/
+
+# Eclipse project files
+.metadata/
+.bin/
+.classpath
+.project
+
+# IntelliJ IDEA files
+.idea/
+*.iml
+out/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Miscellaneous files
+*.swp
+*.tmp
+*.bak
+
+# JetBrains Rider
+.idea/
+
+# Javadoc files
+**/apidocs/
