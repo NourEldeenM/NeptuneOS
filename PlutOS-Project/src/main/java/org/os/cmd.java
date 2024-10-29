@@ -56,8 +56,9 @@ public class cmd {
      * Changes current working directory to directory specified
      *
      * @param args contains directory that we will change to
+     * @return
      */
-    public static void cd(String[] args) {
+    public static String cd(String[] args) {
         String dirName = args[1];
         if (dirName.equals("..")) {
             File currentDir = new File(System.getProperty("user.dir"));
@@ -80,6 +81,7 @@ public class cmd {
                 System.out.println("Error: Directory does not exist.");
             }
         }
+        return dirName;
     }
 
     /**
