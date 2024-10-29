@@ -3,8 +3,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.Test;
-import org.os.nour;
-
+import org.os.cmd;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,7 +11,7 @@ import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class nourTest {
+public class cmdTest {
 
     @Nested
     class catCommandTest {
@@ -23,7 +22,7 @@ public class nourTest {
             Files.writeString(file1, "file1\n");
             Files.writeString(file2, "file2\n");
 
-            String result = nour.cat(new String[]{file1.toString(), file2.toString()});
+            String result = cmd.cat(new String[]{file1.toString(), file2.toString()});
 
             String expectedOutput = "file1\nfile2\n"; // verify output
             assertEquals(expectedOutput, result);
@@ -55,7 +54,7 @@ public class nourTest {
         void testForwardArrowWritesContentToFile() throws IOException {
             String[] args = {"ignored", "Hello, world!", fileName};
 
-            nour.forwardArrow(args);
+            cmd.forwardArrow(args);
 
             String content = new String(Files.readAllBytes(Paths.get(fileName)));
 
@@ -65,14 +64,14 @@ public class nourTest {
         @Test
         void testForwardArrowEmptyContent() throws IOException {
             String[] args = {"ignored", "", fileName};
-            nour.forwardArrow(args);
+            cmd.forwardArrow(args);
             String content = new String(Files.readAllBytes(Paths.get(fileName)));
             assertEquals("", content, "The file should be empty if no content is provided.");
         }
 
         @Test
         void testForwardArrowNullArgs() {
-            assertThrows(NullPointerException.class, () -> nour.forwardArrow(null),
+            assertThrows(NullPointerException.class, () -> cmd.forwardArrow(null),
                     "NullPointerException expected when args is null.");
         }
     }
@@ -96,7 +95,7 @@ public class nourTest {
             System.setProperty("user.dir", testSubDir.getAbsolutePath());
             assertEquals(testSubDir.getAbsolutePath(), System.getProperty("user.dir"));
 
-            nour.cd(new String[]{"ignored", ".."});
+            cmd.cd(new String[]{"ignored", ".."});
             assertEquals(initialDir, System.getProperty("user.dir"));
 
             assertTrue(testSubDir.delete(), "Failed to delete test subdirectory");
@@ -106,7 +105,7 @@ public class nourTest {
         void testChangeToHomeDirectory() {
             System.setProperty("user.dir", initialDir);  // Reset to initial directory
 
-            nour.cd(new String[]{"ignored", "~"});
+            cmd.cd(new String[]{"ignored", "~"});
             assertEquals(homeDir, System.getProperty("user.dir"));
         }
 
@@ -115,7 +114,7 @@ public class nourTest {
             File specificDir = new File(initialDir, "specificDir");
             assertTrue(specificDir.mkdir(), "Failed to create specific directory");
 
-            nour.cd(new String[]{"ignored", "specificDir"});
+            cmd.cd(new String[]{"ignored", "specificDir"});
             assertEquals(specificDir.getAbsolutePath(), System.getProperty("user.dir"));
 
             assertTrue(specificDir.delete(), "Failed to delete specific directory");
@@ -125,7 +124,7 @@ public class nourTest {
         void testErrorForNonExistingDirectory() {
             System.setProperty("user.dir", initialDir);  // Reset to initial directory
 
-            nour.cd(new String[]{"ignored", "nonExistentDir"});
+            cmd.cd(new String[]{"ignored", "nonExistentDir"});
             assertEquals(initialDir, System.getProperty("user.dir"));
         }
 
@@ -133,7 +132,7 @@ public class nourTest {
         void testErrorForNoParentDirectory() {
             System.setProperty("user.dir", "/");
 
-            nour.cd(new String[]{"ignored", ".."});
+            cmd.cd(new String[]{"ignored", ".."});
             assertEquals("/", System.getProperty("user.dir"));
         }
     }
@@ -163,7 +162,7 @@ public class nourTest {
             String[] args = {"ignored", sourceFileName};
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             System.setOut(new PrintStream(outputStream));
-            nour.mv(args);
+            cmd.mv(args);
             assertTrue(outputStream.toString().contains("mv: missing destination file operand"),
                     "Should warn about missing destination operand.");
         }
@@ -173,7 +172,7 @@ public class nourTest {
             String[] args = {"ignored", sourceFileName, destFileName};
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             System.setOut(new PrintStream(outputStream));
-            nour.mv(args);
+            cmd.mv(args);
             File destFile = new File(destFileName);
             assertTrue(destFile.exists(), "Destination file should exist after moving.");
             String content = new String(Files.readAllBytes(destFile.toPath()));

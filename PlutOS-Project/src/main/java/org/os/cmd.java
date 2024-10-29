@@ -4,8 +4,8 @@ import java.io.*;
 import java.util.Objects;
 import java.util.Scanner;
 
-
-public class nour {
+// Has all static methods
+public class cmd {
     /**
      * Concatenates the contents of the files and prints the result. If we use cat with no
      * arguments, it will take input
@@ -82,6 +82,10 @@ public class nour {
         }
     }
 
+    /**
+     * Moves content of file1 -> file2, & deletes file1
+     * @param args has file1 name, file2 name
+     */
     public static void mv(String[] args) {
         if (args.length == 2) {
             System.out.print("mv: missing destination file operand after '" + "'");
@@ -119,4 +123,3 @@ public class nour {
         }
     }
 }
-
