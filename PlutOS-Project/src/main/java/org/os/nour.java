@@ -16,7 +16,7 @@ public class nour {
      * @return String of concatenated file contents, or text to be printed
      */
     public static String cat(String[] args) {
-        if (args.length == 0) {
+        if (args.length == 1) {
             String userInput = "";
             while (!Objects.equals(userInput, "^C")) {
                 Scanner scanner = new Scanner(System.in);
@@ -42,39 +42,81 @@ public class nour {
     /**
      * Saves the text added in content variable inside file passed.
      *
-     * @param content  the text that will be added inside fileName
-     * @param fileName the file that the text will be added into
+     * @param args has content & fileName
      */
-    public static void forwardArrow(String content, String fileName) {
-        try (FileWriter writer = new FileWriter(fileName)) {
-            writer.write(content);
+    public static void forwardArrow(String[] args) {
+        try (FileWriter writer = new FileWriter(args[2])) {
+            writer.write(args[1]);
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
     }
 
-     public static void cd(String dirName) {
-         if (dirName.equals("..")) {
-             File currentDir = new File(System.getProperty("user.dir"));
-             if (currentDir.getParent() != null) {
-                 System.setProperty("user.dir", currentDir.getParent());
-                 System.out.println("Directory changed to: " + currentDir.getParent());
-             } else {
-                 System.out.println("Error: No parent directory.");
-             }
-         } else if (dirName.equals("~")) {
-             String homeDir = System.getProperty("user.home");
-             System.setProperty("user.dir", homeDir);
-             System.out.println("Directory changed to: " + homeDir);
-         } else {
-             File dir = new File(System.getProperty("user.dir"), dirName);
-             if (dir.exists() && dir.isDirectory()) {
-                 System.setProperty("user.dir", dir.getAbsolutePath());
-                 System.out.println("Directory changed to: " + dir.getAbsolutePath());
-             } else {
-                 System.out.println("Error: Directory does not exist.");
-             }
-         }
-     }
+    /**
+     * Changes current working directory to directory specified
+     *
+     * @param args contains directory that we will change to
+     */
+    public static void cd(String[] args) {
+        String dirName = args[1];
+        if (dirName.equals("..")) {
+            File currentDir = new File(System.getProperty("user.dir"));
+            if (currentDir.getParent() != null) {
+                System.setProperty("user.dir", currentDir.getParent());
+                System.out.println("Directory changed to: " + currentDir.getParent());
+            } else {
+                System.out.println("Error: No parent directory.");
+            }
+        } else if (dirName.equals("~")) {
+            String homeDir = System.getProperty("user.home");
+            System.setProperty("user.dir", homeDir);
+            System.out.println("Directory changed to: " + homeDir);
+        } else {
+            File dir = new File(System.getProperty("user.dir"), dirName);
+            if (dir.exists() && dir.isDirectory()) {
+                System.setProperty("user.dir", dir.getAbsolutePath());
+                System.out.println("Directory changed to: " + dir.getAbsolutePath());
+            } else {
+                System.out.println("Error: Directory does not exist.");
+            }
+        }
+    }
 
+    public static void mv(String[] args) {
+        if (args.length == 2) {
+            System.out.print("mv: missing destination file operand after '" + "'");
+            System.out.print(args[1]);
+            System.out.println("'");
+            return;
+        }
+
+        BufferedReader reader = null;
+        FileWriter writer = null;
+        try {
+            reader = new BufferedReader(new FileReader(args[1]));
+            writer = new FileWriter(args[2]);
+            String line;
+            while ((line = reader.readLine()) != null) {
+                writer.append(line).append(System.lineSeparator());
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            try {
+                if (reader != null) reader.close();
+                if (writer != null) writer.close();
+
+                // delete original file
+                File sourceFile = new File(args[1]);
+                if (sourceFile.delete()) {
+                    System.out.println("File moved successfully and original file deleted.");
+                } else {
+                    System.out.println("Error: Could not delete the original file.");
+                }
+            } catch (IOException e) {
+                System.out.println("Error closing file resources: " + e.getMessage());
+            }
+        }
+    }
 }
+
