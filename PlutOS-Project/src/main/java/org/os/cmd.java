@@ -188,7 +188,7 @@ public class cmd {
      * @param tokens The tokens representing the command and its arguments.
      * @return Result of file deletion as a string.
      */
-    protected static String rm(String[] tokens) {
+    public static String rm(String[] tokens) {
         String lastError;
         boolean recursive = false;
         boolean force = false;

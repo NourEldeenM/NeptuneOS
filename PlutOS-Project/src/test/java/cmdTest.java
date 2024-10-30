@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.Test;
 import org.os.cmd;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -181,6 +182,83 @@ public class cmdTest {
             assertFalse(sourceFile.exists(), "Source file should be deleted after moving.");
             assertTrue(outputStream.toString().contains("File moved successfully and original file deleted."),
                     "Output should confirm successful file move and deletion.");
+        }
+    }
+
+    @Nested
+    class pwdCommandTests {
+        @Test
+        public void testPwd() {
+            String[] tokens = {"pwd"};
+            String result = cmd.pwd(tokens);
+            String expectedDir = System.getProperty("user.dir");
+            assertEquals(expectedDir, result, "PWD command failed");
+        }
+    }
+
+    @Nested
+    class rmdirCommandTests {
+
+        @BeforeEach
+        public void setUpRmdir() {
+            new File("testEmptyDir").mkdir();
+            File nonEmptyDir = new File("testNonEmptyDir");
+            nonEmptyDir.mkdir();
+            try {
+                new File(nonEmptyDir, "testFile.txt").createNewFile();
+            } catch (Exception ignored) {
+            }
+        }
+
+        @Test
+        public void testRmdirEmptyDirectory() {
+            String result = cmd.rmdir(new String[]{"rmdir", "testEmptyDir"});
+            assertEquals("Directory 'testEmptyDir' deleted.", result, "RMDIR command failed on empty directory");
+        }
+
+        @Test
+        public void testRmdirNonEmptyDirectory() {
+            String result = cmd.rmdir(new String[]{"rmdir", "testNonEmptyDir"});
+            assertEquals("Error: Directory is not empty.", result, "RMDIR command did not handle non-empty directory correctly");
+        }
+
+        @Test
+        public void testRmdirNonExistentDirectory() {
+            String result = cmd.rmdir(new String[]{"rmdir", "nonExistentDir"});
+            assertEquals("Error: Directory does not exist.", result, "RMDIR command did not handle non-existent directory correctly");
+        }
+    }
+
+    @Nested
+    class RmCommandTests {
+
+        @BeforeEach
+        public void setUpRm() {
+            try {
+                new File("testFile.txt").createNewFile();
+                File dir = new File("testDirRecursive");
+                dir.mkdir();
+                new File(dir, "testFile.txt").createNewFile();
+            } catch (Exception ignored) {
+            }
+        }
+
+        @Test
+        public void testRmFile() {
+            String result = cmd.rm(new String[]{"rm", "testFile.txt"});
+            assertEquals("File 'testFile.txt' deleted.", result, "RM command failed on file deletion");
+        }
+
+        @Test
+        public void testRmNonExistentFile() {
+            String result = cmd.rm(new String[]{"rm", "nonExistentFile.txt"});
+            assertEquals("Error: nonExistentFile.txt does not exist.", result, "RM command did not handle non-existent file correctly");
+        }
+
+        @Test
+        public void testRmDirectoryRecursive() {
+            String result = cmd.rm(new String[]{"rm", "-r", "testDirRecursive"});
+            assertEquals("Directory 'testDirRecursive' deleted.", result, "RM command failed on recursive directory deletion");
         }
     }
 }
