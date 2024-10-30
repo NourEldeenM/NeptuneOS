@@ -1,6 +1,8 @@
 package org.os;
 import java.io.File;
-import java.util.Arrays;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class Moaz {
     private static Boolean  all=false;
@@ -99,5 +101,18 @@ public class Moaz {
 
 //      return ans
         return ans;
+    }
+
+
+    public static void appendOutputToFile(String[] tokens){
+       if(tokens.length<3){
+           throw new IllegalArgumentException("output redirection shuld be on format\n command >> file \n");
+       }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tokens[2], true))) {
+            writer.write(tokens[0]);
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
