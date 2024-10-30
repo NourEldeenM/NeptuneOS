@@ -54,11 +54,11 @@ public class driverProgram {
 
             // working on moaz's code
             case "ls":
-                System.out.print(Moaz.ls(tokens));
+                System.out.print(cmd.ls(tokens));
                 break;
 
             case ">>":
-                Moaz.appendOutputToFile(tokens);
+                cmd.appendOutputToFile(tokens);
                 break;
 //            case ">":
 //                cmd.forwardArrow(tokens);
