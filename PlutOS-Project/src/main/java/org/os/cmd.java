@@ -440,11 +440,47 @@ public class cmd {
         if (tokens.length < 3) {
             throw new IllegalArgumentException("Output redirection should be in the format: command >> file");
         }
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tokens[2], true))) {
-            writer.write(tokens[0]);
-            writer.newLine();
+
+//        line command >> file
+        String command=tokens[0];
+        String file=tokens[2];
+
+
+        try (FileWriter writer = new FileWriter(file,true)) {
+            tokens = command.trim().split("\\s+");
+            String otherCommand = tokens[0].toLowerCase();
+            String line;
+            switch (otherCommand) {
+                case "cd":
+                    line = cmd.cd(tokens);
+                    break;
+                case "mv":
+                    line = "";
+                    break;
+                case "pwd":
+                    line = cmd.pwd(tokens);
+                    break;
+                case "rmdir", "rm":
+                    line = "";
+                    break;
+                case "ls":
+                    line = cmd.ls(tokens);
+                    break;
+                case "cat":
+                    line = cmd.cat(tokens);
+                    break;
+                case "help":
+                    line= "help man\n";
+                    break;
+                default:
+                    line = "Unknown command: " + tokens[0];
+                    break;
+            }
+            writer.append(line);
+            writer.append(System.lineSeparator());
+            writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
     }
 }
