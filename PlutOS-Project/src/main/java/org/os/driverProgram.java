@@ -36,6 +36,10 @@ public class driverProgram {
             case "rm":
                 System.out.println(cmd.rm(tokens));
                 break;
+
+            // working on moaz's code
+            case "ls":
+                System.out.print(Moaz.ls(tokens));
 //            case ">":
 //                cmd.forwardArrow(tokens);
 //                break;
