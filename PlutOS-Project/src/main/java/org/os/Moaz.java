@@ -6,91 +6,98 @@ public class Moaz {
     private static Boolean  all=false;
     private static Boolean recursive=false;
 
-    //should be revised
-    private static String extractPath(String line) {
-        String path = ".";
-
-        int start = line.indexOf("/");
-        if (start == -1) {
-            return path;
-        }
-
-        int end = line.indexOf(" ", start);
-        if (end == -1 ) {
-            end = line.length();
-        }
-
-
-        if (end > 0 && (line.charAt(end - 1) == '\'' || line.charAt(end - 1) == '\"')) {
-            end--;
-        }
-
-        path = line.substring(start, end).trim();
-
-        if (path.isEmpty()) {
-            return ".";
-        }
-
-        return path;
-    }
-    private static void displayDir(String path, int indent ){
+   private static String displayDir(String path, int indent ){
         if(path.charAt(path.length()-1)!='/'){
             path+="/";
         }
+
         File currentDir=new File(path);
-        if(currentDir==null){
-            return;
+       if (!currentDir.exists() || !currentDir.isDirectory()) {
+            return "";
         }
+
         File[] files=currentDir.listFiles();
-        String spaces=" ".repeat(indent*4);
+
+       if (files == null) {
+           return "";
+       }
+
+
+       StringBuilder ans = new StringBuilder();
+       String spaces=" ".repeat(indent*4);
         for (File file:files){
             if(file.isHidden()&&!all){
                 continue;
             }
 
-            System.out.print(spaces);
+            ans.append(spaces).append(file.getName());
             if(file.isDirectory()){
-                System.out.print('/');
+                ans.append('/');
             }
-            System.out.println( file.getName());
 
+            ans.append("\n");
             if(file.isDirectory()&&recursive){
-                String nPath=path+file.getName().toString();
+                String nPath=path+file.getName();
 
-                displayDir(nPath,indent+1);
+
+                ans.append(displayDir(nPath,indent+1));
             }
         }
+        return ans.toString();
 
     }
-    public static void ls(String line){
-        //check that line is for ls
-        if (!line.contains("ls ")) {
-            throw new IllegalArgumentException("Invalid command: The line must contain 'ls '");
+
+
+    public static String ls(String[] tokens){
+
+//        set all booleans to flase
+        all=false;
+        recursive=false;
+
+//        check that line is for ls
+        if (!tokens[0].contains("ls")) {
+            throw new IllegalArgumentException("Invalid command: The line must contain 'ls'");
         }
 
-        //set all boolean arguments
-        if (line.contains("-")){
-            int dashIndex=line.indexOf("-");
-            int end=line.indexOf(" ",dashIndex);
-            if(end==-1){
-                end=line.length();
-            }
-            String args=line.substring(dashIndex+1,end);
-//                System.out.println(args);
-            for(char c:args.toCharArray() ){
+//        set all boolean arguments
+        if (tokens.length>1&&tokens[1].contains("-")){
+            for(char c:tokens[1].toCharArray() ){
+                if(c=='-'){
+                    continue;
+                }
                 if(c=='a'){
                     all=true;
+                    continue;
                 }
                 if(c=='r'){
                     recursive=true;
+                    continue;
                 }
+                throw new IllegalArgumentException("This "+"argument didn't supported\n");
             }
         }
-        String path=extractPath(line);
 
-        System.out.println(path);
-        displayDir(path,0);
-        all=false;
-        recursive=false;
+        //extract path
+        String path=".";
+        if(tokens.length>=3){
+            int start=0;
+            int end=tokens[2].length();
+            if(tokens[2].contains("\"")||tokens[2].contains("'")){
+                start++;
+                if(tokens[2].substring(start).contains("\"")||tokens[2].substring(start).contains("'")){
+                    end--;
+                }else{
+                    throw new IllegalArgumentException("your path is not valid");
+                }
+            }
+            path=tokens[2].substring(start,end);
+        }
+
+//        call display dir function that loop over files in given path
+        String ans=displayDir(path,0);
+
+
+//      return ans
+        return ans;
     }
 }
