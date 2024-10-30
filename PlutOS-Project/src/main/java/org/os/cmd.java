@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.Objects;
 import java.util.Scanner;
 
+
 // Has all static methods
 public class cmd {
     /**
@@ -269,4 +270,158 @@ public class cmd {
             return "Error: Could not delete directory '" + dir.getName() + "'.";
         }
     }
+
+    /**
+     * Displays the contents of a directory, including files and subdirectories.
+     *
+     * This method recursively lists the contents of the specified directory,
+     * applying indentation based on the depth of the directory structure.
+     * It can filter hidden files based on the 'all' parameter and can
+     * display subdirectories recursively if 'recursive' is set to true.
+     *
+     * @param path     The path to the directory to be displayed.
+     * @param indent   The indentation level for displaying the contents.
+     *                 Each level is represented by four spaces.
+     * @return A string representation of the directory's contents,
+     *         formatted with appropriate indentation.
+     * @author Moaz Mohamed
+     */
+    private static String displayDir(String path, int indent, Boolean all , Boolean recursive ){
+        if(path.charAt(path.length()-1)!='/'){
+            path+="/";
+        }
+
+        File currentDir=new File(path);
+        if (!currentDir.exists() || !currentDir.isDirectory()) {
+            return "";
+        }
+
+        File[] files=currentDir.listFiles();
+
+        if (files == null) {
+            return "";
+        }
+
+
+        StringBuilder ans = new StringBuilder();
+        String spaces=" ".repeat(indent*4);
+        for (File file:files){
+            if(file.isHidden()&&!all){
+                continue;
+            }
+
+            ans.append(spaces).append(file.getName());
+            if(file.isDirectory()){
+                ans.append('/');
+            }
+
+            ans.append("\n");
+            if(file.isDirectory()&&recursive){
+                String nPath=path+file.getName();
+
+
+                ans.append(displayDir(nPath,indent+1,all,recursive));
+            }
+        }
+        return ans.toString();
+
+    }
+
+
+    /**
+     * Lists the contents of a directory based on the provided command tokens.
+     *
+     * This method processes the 'ls' command, allowing for options to include hidden
+     * files and to display the contents recursively. It extracts the path from the
+     * command tokens and calls the displayDir method to retrieve the formatted
+     * directory listing.
+     *
+     * @param tokens An array of strings representing the command tokens,
+     *               where the first token should be "ls". Additional tokens
+     *               may specify options (e.g., "-a" for all files) and the path.
+     *
+     * @return A string representation of the directory's contents, formatted
+     *         according to the specified options.
+     * @author Moaz Mohamed
+     */
+    public static String ls(String[] tokens){
+
+//        set all booleans to flase
+        Boolean  all=false;
+        Boolean recursive=false;
+
+//        check that line is for ls
+        if (!tokens[0].contains("ls")) {
+            throw new IllegalArgumentException("Invalid command: The line must contain 'ls'");
+        }
+
+//        set all boolean arguments
+        if (tokens.length>1&&tokens[1].contains("-")){
+            for(char c:tokens[1].toCharArray() ){
+                if(c=='-'){
+                    continue;
+                }
+                if(c=='a'){
+                    all=true;
+                    continue;
+                }
+                if(c=='r'){
+                    recursive=true;
+                    continue;
+                }
+                throw new IllegalArgumentException("This "+c+"argument didn't supported\n");
+            }
+        }
+
+        //extract path
+        String path=".";
+        if(tokens.length>=3){
+            int start=0;
+            int end=tokens[2].length();
+            if(tokens[2].contains("\"")||tokens[2].contains("'")){
+                start++;
+                if(tokens[2].substring(start).contains("\"")||tokens[2].substring(start).contains("'")){
+                    end--;
+                }else{
+                    throw new IllegalArgumentException("your path is not valid");
+                }
+            }
+            path=tokens[2].substring(start,end);
+        }
+
+//        call display dir function that loop over files in given path
+        String ans=displayDir(path,0,all , recursive);
+
+
+//      return ans
+        return ans;
+    }
+
+    /**
+     * Appends the output of a command to a specified file.
+     *
+     * This method takes an array of command tokens, where the first token is the
+     * command to be written, and the third token is the filename. It verifies that
+     * the output redirection is correctly formatted (i.e., command >> file).
+     * If the file does not exist, it will be created. The command's output is
+     * appended to the specified file.
+     *
+     * @param tokens An array of strings representing the command tokens.
+     *               The first token is the command output, and the third token
+     *               specifies the file to which the output should be appended.
+     * @author Moaz Mohamed
+     */
+    public static void appendOutputToFile(String[] tokens) {
+        if (tokens.length < 3) {
+            throw new IllegalArgumentException("Output redirection should be in the format: command >> file");
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tokens[2], true))) {
+            writer.write(tokens[0]);
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }

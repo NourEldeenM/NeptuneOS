@@ -1,12 +1,13 @@
 package org.os;
 import java.io.File;
-import java.util.Arrays;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class Moaz {
-    private static Boolean  all=false;
-    private static Boolean recursive=false;
 
-   private static String displayDir(String path, int indent ){
+
+   private static String displayDir(String path, int indent, Boolean all , Boolean recursive ){
         if(path.charAt(path.length()-1)!='/'){
             path+="/";
         }
@@ -40,7 +41,7 @@ public class Moaz {
                 String nPath=path+file.getName();
 
 
-                ans.append(displayDir(nPath,indent+1));
+                ans.append(displayDir(nPath,indent+1,all,recursive));
             }
         }
         return ans.toString();
@@ -51,8 +52,8 @@ public class Moaz {
     public static String ls(String[] tokens){
 
 //        set all booleans to flase
-        all=false;
-        recursive=false;
+        Boolean  all=false;
+        Boolean recursive=false;
 
 //        check that line is for ls
         if (!tokens[0].contains("ls")) {
@@ -73,7 +74,7 @@ public class Moaz {
                     recursive=true;
                     continue;
                 }
-                throw new IllegalArgumentException("This "+"argument didn't supported\n");
+                throw new IllegalArgumentException("This "+c+"argument didn't supported\n");
             }
         }
 
@@ -94,10 +95,23 @@ public class Moaz {
         }
 
 //        call display dir function that loop over files in given path
-        String ans=displayDir(path,0);
+        String ans=displayDir(path,0,all , recursive);
 
 
 //      return ans
         return ans;
+    }
+
+
+    public static void appendOutputToFile(String[] tokens){
+       if(tokens.length<3){
+           throw new IllegalArgumentException("output redirection shuld be on format\n command >> file \n");
+       }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tokens[2], true))) {
+            writer.write(tokens[0]);
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
