@@ -50,7 +50,34 @@ public class cmd {
      */
     public static void forwardArrow(String[] args) {
         try (FileWriter writer = new FileWriter(args[2])) {
-            writer.write(args[1]);
+            String line;
+            switch (args[0]) {
+                case "cd":
+                    line = cmd.cd(args);
+                    break;
+//                case "mv":
+//                    line = cmd.mv(args);
+//                    break;
+                case "pwd":
+                    line = cmd.pwd(args);
+                    break;
+                case "rmdir", "rm":
+                    line = "";
+                    break;
+                // working on moaz's code
+                case "ls":
+                    line = cmd.ls(args);
+                    break;
+                case "cat":
+                    line = cmd.cat(args);
+                    break;
+//            case "help":
+//                return help(tokens);
+                default:
+                    line = "Unknown command: " + args[0];
+                    break;
+            }
+            writer.write(line);
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
@@ -276,30 +303,30 @@ public class cmd {
 
     /**
      * Displays the contents of a directory, including files and subdirectories.
-     *
+     * <p>
      * This method recursively lists the contents of the specified directory,
      * applying indentation based on the depth of the directory structure.
      * It can filter hidden files based on the 'all' parameter and can
      * display subdirectories recursively if 'recursive' is set to true.
      *
-     * @param path     The path to the directory to be displayed.
-     * @param indent   The indentation level for displaying the contents.
-     *                 Each level is represented by four spaces.
+     * @param path   The path to the directory to be displayed.
+     * @param indent The indentation level for displaying the contents.
+     *               Each level is represented by four spaces.
      * @return A string representation of the directory's contents,
-     *         formatted with appropriate indentation.
+     * formatted with appropriate indentation.
      * @author Moaz Mohamed
      */
-    private static String displayDir(String path, int indent, Boolean all , Boolean recursive ){
-        if(path.charAt(path.length()-1)!='/'){
-            path+="/";
+    private static String displayDir(String path, int indent, Boolean all, Boolean recursive) {
+        if (path.charAt(path.length() - 1) != '/') {
+            path += "/";
         }
 
-        File currentDir=new File(path);
+        File currentDir = new File(path);
         if (!currentDir.exists() || !currentDir.isDirectory()) {
             return "";
         }
 
-        File[] files=currentDir.listFiles();
+        File[] files = currentDir.listFiles();
 
         if (files == null) {
             return "";
@@ -307,33 +334,32 @@ public class cmd {
 
 
         StringBuilder ans = new StringBuilder();
-        String spaces=" ".repeat(indent*4);
-        for (File file:files){
-            if(file.isHidden()&&!all){
+        String spaces = " ".repeat(indent * 4);
+        for (File file : files) {
+            if (file.isHidden() && !all) {
                 continue;
             }
 
             ans.append(spaces).append(file.getName());
-            if(file.isDirectory()){
+            if (file.isDirectory()) {
                 ans.append('/');
             }
 
             ans.append("\n");
-            if(file.isDirectory()&&recursive){
-                String nPath=path+file.getName();
+            if (file.isDirectory() && recursive) {
+                String nPath = path + file.getName();
 
 
-                ans.append(displayDir(nPath,indent+1,all,recursive));
+                ans.append(displayDir(nPath, indent + 1, all, recursive));
             }
         }
         return ans.toString();
 
     }
 
-
     /**
      * Lists the contents of a directory based on the provided command tokens.
-     *
+     * <p>
      * This method processes the 'ls' command, allowing for options to include hidden
      * files and to display the contents recursively. It extracts the path from the
      * command tokens and calls the displayDir method to retrieve the formatted
@@ -342,16 +368,15 @@ public class cmd {
      * @param tokens An array of strings representing the command tokens,
      *               where the first token should be "ls". Additional tokens
      *               may specify options (e.g., "-a" for all files) and the path.
-     *
      * @return A string representation of the directory's contents, formatted
-     *         according to the specified options.
+     * according to the specified options.
      * @author Moaz Mohamed
      */
-    public static String ls(String[] tokens){
+    public static String ls(String[] tokens) {
 
 //        set all booleans to flase
-        Boolean  all=false;
-        Boolean recursive=false;
+        Boolean all = false;
+        Boolean recursive = false;
 
 //        check that line is for ls
         if (!tokens[0].contains("ls")) {
@@ -359,41 +384,41 @@ public class cmd {
         }
 
 //        set all boolean arguments
-        if (tokens.length>1&&tokens[1].contains("-")){
-            for(char c:tokens[1].toCharArray() ){
-                if(c=='-'){
+        if (tokens.length > 1 && tokens[1].contains("-")) {
+            for (char c : tokens[1].toCharArray()) {
+                if (c == '-') {
                     continue;
                 }
-                if(c=='a'){
-                    all=true;
+                if (c == 'a') {
+                    all = true;
                     continue;
                 }
-                if(c=='r'){
-                    recursive=true;
+                if (c == 'r') {
+                    recursive = true;
                     continue;
                 }
-                throw new IllegalArgumentException("This "+c+"argument didn't supported\n");
+                throw new IllegalArgumentException("This " + c + "argument didn't supported\n");
             }
         }
 
         //extract path
-        String path=".";
-        if(tokens.length>=3){
-            int start=0;
-            int end=tokens[2].length();
-            if(tokens[2].contains("\"")||tokens[2].contains("'")){
+        String path = ".";
+        if (tokens.length >= 3) {
+            int start = 0;
+            int end = tokens[2].length();
+            if (tokens[2].contains("\"") || tokens[2].contains("'")) {
                 start++;
-                if(tokens[2].substring(start).contains("\"")||tokens[2].substring(start).contains("'")){
+                if (tokens[2].substring(start).contains("\"") || tokens[2].substring(start).contains("'")) {
                     end--;
-                }else{
+                } else {
                     throw new IllegalArgumentException("your path is not valid");
                 }
             }
-            path=tokens[2].substring(start,end);
+            path = tokens[2].substring(start, end);
         }
 
 //        call display dir function that loop over files in given path
-        String ans=displayDir(path,0,all , recursive);
+        String ans = displayDir(path, 0, all, recursive);
 
 
 //      return ans
@@ -402,7 +427,7 @@ public class cmd {
 
     /**
      * Appends the output of a command to a specified file.
-     *
+     * <p>
      * This method takes an array of command tokens, where the first token is the
      * command to be written, and the third token is the filename. It verifies that
      * the output redirection is correctly formatted (i.e., command >> file).
@@ -589,6 +614,4 @@ public class cmd {
         }
         return commandList.toArray(new String[0]);
     }
-
-
 }

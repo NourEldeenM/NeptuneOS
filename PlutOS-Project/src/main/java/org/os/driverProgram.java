@@ -15,7 +15,6 @@ public class driverProgram {
         return "\u001B[34m" + s + "\u001B[0m";
     }
 
-
     public static void start() {
         Scanner scanner = new Scanner(System.in);
         while (true) {
@@ -38,6 +37,8 @@ public class driverProgram {
         if (input.contains("|")) {
             cmd.handlePipe(input);
             return;
+        } else if (input.contains(">")) {
+            command = ">";
         }
         switch (command) {
             case "cd":
@@ -55,24 +56,19 @@ public class driverProgram {
             case "rm":
                 System.out.println(cmd.rm(tokens));
                 break;
-
             // working on moaz's code
             case "ls":
                 System.out.print(cmd.ls(tokens));
                 break;
-
             case ">>":
                 cmd.appendOutputToFile(tokens);
                 break;
-//            case ">":
-//                cmd.forwardArrow(tokens);
-//                break;
-            case "cat":
-                cmd.cat(tokens);
+            case ">":
+                cmd.forwardArrow(tokens);
                 break;
-//            case "exit":
-//                flag = false;
-//                break;
+            case "cat":
+                System.out.println(cmd.cat(tokens));
+                break;
 //            case "help":
 //                return help(tokens);
             case "mkdir":
@@ -84,6 +80,7 @@ public class driverProgram {
             default:
                 System.out.println("Unknown command: " + command);
         }
+        return "";
     }
 
 
