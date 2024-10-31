@@ -261,4 +261,104 @@ public class cmdTest {
             assertEquals("Directory 'testDirRecursive' deleted.", result, "RM command failed on recursive directory deletion");
         }
     }
+
+//    ls command tests
+
+    @Nested
+    class LsCommandTests {
+
+        @BeforeEach
+        public void setUpLs() {
+            try {
+                // Create some test files and directories
+                new File("testFile1.txt").createNewFile();
+                new File("testFile2.txt").createNewFile();
+                File testDir = new File("testDir");
+                testDir.mkdir();
+                new File(testDir, "testFileInDir.txt").createNewFile();
+            } catch (Exception ignored) {
+            }
+        }
+
+        @AfterEach
+        public void tearDown() {
+            // Clean up the created files and directories after each test
+            new File("testFile1.txt").delete();
+            new File("testFile2.txt").delete();
+            File dir = new File("testDir");
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    file.delete();
+                }
+            }
+            dir.delete();
+        }
+
+        @Test
+        public void testLsNoArgs() {
+            String result = cmd.ls(new String[]{"ls"});
+            assertTrue(result.contains("testFile1.txt"), "LS command should list 'testFile1.txt'");
+            assertTrue(result.contains("testFile2.txt"), "LS command should list 'testFile2.txt'");
+            assertTrue(result.contains("testDir"), "LS command should list 'testDir'");
+        }
+
+        @Test
+        public void testLsWithDirectory() {
+            String result = cmd.ls(new String[]{"ls", "testDir"});
+            assertTrue(result.contains("testFileInDir.txt"), "LS command should list 'testFileInDir.txt' in 'testDir'");
+        }
+
+        @Test
+        public void testLsNonExistentDirectory() {
+            String result = cmd.ls(new String[]{"ls", "nonExistentDir"});
+            assertEquals("Error: nonExistentDir does not exist.\n", result, "LS command did not handle non-existent directory correctly");
+        }
+
+        @Test
+        public void testLsWithInvalidArgs() {
+            String result = cmd.ls(new String[]{"ls", "-invalidArg"});
+            assertEquals("Error: This i argument isn't supported\n", result, "LS command should handle an unsupported argument correctly");
+        }
+        @Test
+        public void testLsWithAllFlag() {
+            // Create a hidden file for testing
+            try {
+                new File(".hiddenFile.txt").createNewFile();
+            } catch (Exception ignored) {
+            }
+
+            String result = cmd.ls(new String[]{"ls", "-a"});
+            // Check if the output includes the hidden file and other visible files
+            assertTrue(result.contains("testFile1.txt"), "LS command should list 'testFile1.txt'");
+            assertTrue(result.contains("testFile2.txt"), "LS command should list 'testFile2.txt'");
+            assertTrue(result.contains("testDir"), "LS command should list 'testDir'");
+            assertTrue(result.contains(".hiddenFile.txt"), "LS command should list '.hiddenFile.txt' when using -a");
+
+            // Clean up
+            new File(".hiddenFile.txt").delete();
+        }
+        @Test
+        public void testLsWithRecursiveFlag() {
+            // Create a directory with nested directories and files for testing
+            File nestedDir = new File("testDir/nestedDir");
+            nestedDir.mkdirs();
+            try {
+                new File(nestedDir, "nestedFile.txt").createNewFile();
+            } catch (Exception ignored) {
+            }
+
+            String result = cmd.ls(new String[]{"ls", "-r", "testDir"});
+            // Check if the output includes the nested file
+            assertTrue(result.contains("nestedDir"), "LS command should list 'nestedDir' in 'testDir'");
+            assertTrue(result.contains("nestedFile.txt"), "LS command should list 'nestedFile.txt' in 'nestedDir'");
+
+            // Clean up
+            new File(nestedDir, "nestedFile.txt").delete();
+            nestedDir.delete();
+        }
+    }
+
+
+
 }
