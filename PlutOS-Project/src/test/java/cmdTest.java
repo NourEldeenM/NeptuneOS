@@ -283,23 +283,31 @@ public class cmdTest {
             assertEquals("Error: Directory already exists.", result);
             new File(basePath + dirName).delete();
         }
-
+        
         @Test
-        public void testMkdirCustomPath() {
-            String dirName = "some" + File.separator + "custom" + File.separator + "nestedDir_" + System.currentTimeMillis();
-            String[] tokens = {"mkdir", dirName};
-            String result = cmd.mkdirCommand(tokens);
-            String expectedPath = basePath + dirName;
-            System.out.println("Expected Path: " + expectedPath);
-            System.out.println("Actual Result: " + result);
-
-            assertEquals("Directory '" + dirName + "' created at " + expectedPath, result);
-
-            File dir = new File(expectedPath);
-            assertTrue(dir.exists(), "Directory should exist");
-            dir.delete();
+        void testMkdirCustomPath() throws IOException {
+            File tempDir = Files.createTempDirectory("testDir").toFile();
+            String[] tokens = {"mkdir", "some/custom/nestedDir_test", tempDir.getAbsolutePath()};
+            String expectedOutput = "Directory 'some/custom/nestedDir_test' created at " +
+                    tempDir.getAbsolutePath() + File.separator + "some" + File.separator + "custom" + File.separator + "nestedDir_test";
+            String actualOutput = cmd.mkdirCommand(tokens);
+            assertEquals(expectedOutput, actualOutput);
+            deleteDir(tempDir);
         }
-
+        private void deleteDir(File directory) {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        deleteDir(file);
+                    } else {
+                        file.delete();
+                    }
+                }
+            }
+            directory.delete();
+        }
+        
         @Test
         public void testMkdirWithExistingDir() {
             String dirName = "existingDir_" + System.currentTimeMillis();
