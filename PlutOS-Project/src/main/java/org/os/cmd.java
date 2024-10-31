@@ -453,7 +453,7 @@ public class cmd {
         if (directory.exists()) {
             return "Error: Directory already exists.";
         }
-        if (directory.mkdir()) {
+        if (directory.mkdirs()) { // Use mkdirs to create any necessary parent directories
             return "Directory '" + dirName + "' created at " + directory.getAbsolutePath();
         } else {
             return "Error: Could not create directory.";
