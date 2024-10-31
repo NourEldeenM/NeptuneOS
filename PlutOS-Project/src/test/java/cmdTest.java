@@ -255,6 +255,171 @@ public class cmdTest {
         }
     }
 
+//    ls command tests
+
+    @Nested
+    class LsCommandTests {
+
+        @BeforeEach
+        public void setUpLs() {
+            try {
+                // Create some test files and directories
+                new File("testFile1.txt").createNewFile();
+                new File("testFile2.txt").createNewFile();
+                File testDir = new File("testDir");
+                testDir.mkdir();
+                new File(testDir, "testFileInDir.txt").createNewFile();
+            } catch (Exception ignored) {
+            }
+        }
+
+        @AfterEach
+        public void tearDown() {
+            // Clean up the created files and directories after each test
+            new File("testFile1.txt").delete();
+            new File("testFile2.txt").delete();
+            File dir = new File("testDir");
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    file.delete();
+                }
+            }
+            dir.delete();
+        }
+
+        @Test
+        public void testLsNoArgs() {
+            String result = cmd.ls(new String[]{"ls"});
+            assertTrue(result.contains("testFile1.txt"), "LS command should list 'testFile1.txt'");
+            assertTrue(result.contains("testFile2.txt"), "LS command should list 'testFile2.txt'");
+            assertTrue(result.contains("testDir"), "LS command should list 'testDir'");
+        }
+
+        @Test
+        public void testLsWithDirectory() {
+            String result = cmd.ls(new String[]{"ls", "testDir"});
+            assertTrue(result.contains("testFileInDir.txt"), "LS command should list 'testFileInDir.txt' in 'testDir'");
+        }
+
+        @Test
+        public void testLsNonExistentDirectory() {
+            String result = cmd.ls(new String[]{"ls", "nonExistentDir"});
+            assertEquals("Error: nonExistentDir does not exist.\n", result, "LS command did not handle non-existent directory correctly");
+        }
+
+        @Test
+        public void testLsWithInvalidArgs() {
+            String result = cmd.ls(new String[]{"ls", "-invalidArg"});
+            assertEquals("Error: This i argument isn't supported\n", result, "LS command should handle an unsupported argument correctly");
+        }
+
+        @Test
+        public void testLsWithAllFlag() {
+            // Create a hidden file for testing
+            try {
+                new File(".hiddenFile.txt").createNewFile();
+            } catch (Exception ignored) {
+            }
+
+            String result = cmd.ls(new String[]{"ls", "-a"});
+            // Check if the output includes the hidden file and other visible files
+            assertTrue(result.contains("testFile1.txt"), "LS command should list 'testFile1.txt'");
+            assertTrue(result.contains("testFile2.txt"), "LS command should list 'testFile2.txt'");
+            assertTrue(result.contains("testDir"), "LS command should list 'testDir'");
+            assertTrue(result.contains(".hiddenFile.txt"), "LS command should list '.hiddenFile.txt' when using -a");
+
+            // Clean up
+            new File(".hiddenFile.txt").delete();
+        }
+
+        @Test
+        public void testLsWithRecursiveFlag() {
+            // Create a directory with nested directories and files for testing
+            File nestedDir = new File("testDir/nestedDir");
+            nestedDir.mkdirs();
+            try {
+                new File(nestedDir, "nestedFile.txt").createNewFile();
+            } catch (Exception ignored) {
+            }
+
+            String result = cmd.ls(new String[]{"ls", "-r", "testDir"});
+            // Check if the output includes the nested file
+            assertTrue(result.contains("nestedDir"), "LS command should list 'nestedDir' in 'testDir'");
+            assertTrue(result.contains("nestedFile.txt"), "LS command should list 'nestedFile.txt' in 'nestedDir'");
+
+            // Clean up
+            new File(nestedDir, "nestedFile.txt").delete();
+            nestedDir.delete();
+        }
+
+    }
+
+    @Nested
+    class AppendOutputToFileTests {
+
+        private final String testFilePath = "outputTest.txt";
+        private final String testDirPath = "testDir";
+
+        @BeforeEach
+        public void setUp() throws IOException {
+            new File(testDirPath).mkdir();
+
+            File testFile = new File(testFilePath);
+            if (!testFile.exists()) {
+                testFile.createNewFile();
+            }
+        }
+
+        @AfterEach
+        public void tearDown() {
+            File testFile = new File(testFilePath);
+            if (testFile.exists()) {
+                testFile.delete();
+            }
+            File testDir = new File(testDirPath);
+            if (testDir.exists()) {
+                testDir.delete();
+            }
+        }
+
+        @Test
+        public void testAppendOutputToFileWithValidCommand() throws IOException {
+            String result = cmd.appendOutputToFile(new String[]{"pwd", ">>", testFilePath});
+
+            assertEquals("Output successfully appended to outputTest.txt", result);
+
+            String content = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(testFilePath)));
+            assertTrue(content.contains(System.getProperty("user.dir")), "Output file should contain the current directory path.");
+        }
+
+        @Test
+        public void testAppendOutputToFileWithUnknownCommand() {
+            String result = cmd.appendOutputToFile(new String[]{"unknownCommand", ">>", testFilePath});
+            assertEquals("Error: Unknown command.", result);
+        }
+
+        @Test
+        public void testAppendOutputToFileWithInsufficientArguments() {
+            String result = cmd.appendOutputToFile(new String[]{"ls", ">>"});
+            assertEquals("Error: Output redirection should be in the format: command >> file", result);
+        }
+
+        @Test
+        public void testAppendOutputToFileWithExistingFile() throws IOException {
+            try (FileWriter writer = new FileWriter(testFilePath)) {
+                writer.write("Existing content\n");
+            }
+
+            String result = cmd.appendOutputToFile(new String[]{"pwd", ">>", testFilePath});
+            assertEquals("Output successfully appended to outputTest.txt", result);
+
+            String content = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(testFilePath)));
+            assertTrue(content.contains("Existing content"), "Output file should still contain the existing content.");
+            assertTrue(content.contains(System.getProperty("user.dir")), "Output file should contain the current directory path.");
+        }
+    }
+
     @Nested
     class mkdirTest {
         private String basePath;
@@ -283,7 +448,7 @@ public class cmdTest {
             assertEquals("Error: Directory already exists.", result);
             new File(basePath + dirName).delete();
         }
-        
+
         @Test
         void testMkdirCustomPath() throws IOException {
             File tempDir = Files.createTempDirectory("testDir").toFile();
@@ -294,6 +459,7 @@ public class cmdTest {
             assertEquals(expectedOutput, actualOutput);
             deleteDir(tempDir);
         }
+
         private void deleteDir(File directory) {
             File[] files = directory.listFiles();
             if (files != null) {
@@ -307,7 +473,7 @@ public class cmdTest {
             }
             directory.delete();
         }
-        
+
         @Test
         public void testMkdirWithExistingDir() {
             String dirName = "existingDir_" + System.currentTimeMillis();
@@ -378,7 +544,7 @@ public class cmdTest {
             assertTrue(new File(System.getProperty("user.dir"), "testDir").exists());
             assertTrue(new File(System.getProperty("user.dir"), TEST_FILE_NAME).exists());
         }
-        
+
         @Test
         public void testPipeCommandWithPwd() {
             String input = "pwd";
@@ -413,68 +579,67 @@ public class cmdTest {
                 }
             }
         }
-
         @Test
-        public void testPipeCommandWithCat() {
-            String testFileName = "testFileForCat.txt";
-            try {
-                Files.writeString(Paths.get(testFileName), "Sample content for cat test.");
-                assertTrue(Files.exists(Paths.get(testFileName)), "File should exist after writing.");
-                String input = "cat " + testFileName;
-                String output = handlePipe(input);
-                assertEquals("Sample content for cat test.", output.strip(), "Output should match file content.");
-            } catch (IOException e) {
-                fail("Failed to create or read the test file: " + e.getMessage());
-            } finally {
-                try {
-                    Files.deleteIfExists(Paths.get(testFileName));
-                } catch (IOException e) {
-                    System.err.println("Cleanup failed: " + e.getMessage());
+        public void testPipeCommandWithCat () {
+                    String testFileName = "testFileForCat.txt";
+                    try {
+                        Files.writeString(Paths.get(testFileName), "Sample content for cat test.");
+                        assertTrue(Files.exists(Paths.get(testFileName)), "File should exist after writing.");
+                        String input = "cat " + testFileName;
+                        String output = handlePipe(input);
+                        assertEquals("Sample content for cat test.", output.strip(), "Output should match file content.");
+                    } catch (IOException e) {
+                        fail("Failed to create or read the test file: " + e.getMessage());
+                    } finally {
+                        try {
+                            Files.deleteIfExists(Paths.get(testFileName));
+                        } catch (IOException e) {
+                            System.err.println("Cleanup failed: " + e.getMessage());
+                        }
+                    }
                 }
-            }
-        }
 
-        private String handlePipe(String command) {
-            if (command.startsWith("cat ")) {
-                String fileName = command.substring(4).trim();
-                return readFileContents(fileName);
-            } else if (command.startsWith("ls ")) {
-                String directoryName = command.substring(3).trim();
-                return listDirectoryContents(directoryName);
-            }
-            return "";
-        }
+        private String handlePipe (String command){
+                    if (command.startsWith("cat ")) {
+                        String fileName = command.substring(4).trim();
+                        return readFileContents(fileName);
+                    } else if (command.startsWith("ls ")) {
+                        String directoryName = command.substring(3).trim();
+                        return listDirectoryContents(directoryName);
+                    }
+                    return "";
+                }
 
-        private String readFileContents(String fileName) {
-            try {
-                return Files.readString(Paths.get(fileName));
-            } catch (IOException e) {
-                return "Error reading file: " + e.getMessage();
-            }
-        }
+        private String readFileContents (String fileName){
+                    try {
+                        return Files.readString(Paths.get(fileName));
+                    } catch (IOException e) {
+                        return "Error reading file: " + e.getMessage();
+                    }
+                }
 
-        private String listDirectoryContents(String directoryName) {
-            File directory = new File(directoryName);
-            String[] files = directory.list();
-            if (files != null && files.length > 0) {
-                return String.join("\n", files);
-            }
-            return "";
-        }
+        private String listDirectoryContents (String directoryName){
+                    File directory = new File(directoryName);
+                    String[] files = directory.list();
+                    if (files != null && files.length > 0) {
+                        return String.join("\n", files);
+                    }
+                    return "";
+                }
 
         @Test
-        public void testPipeCommandWithHelp() {
-            String input = "help";
-            cmd.handlePipe(input);
-            String helpOutput = cmd.help();
-            assertNotNull(helpOutput);
-            assertTrue(helpOutput.length() > 0);
-        }
+        public void testPipeCommandWithHelp () {
+                    String input = "help";
+                    cmd.handlePipe(input);
+                    String helpOutput = cmd.help();
+                    assertNotNull(helpOutput);
+                    assertTrue(helpOutput.length() > 0);
+                }
         @Test
-        public void testPipeCommandWithInvalidCommand() {
-            String input = "mkdir testDir | invalidCommand";
-            cmd.handlePipe(input); //"Unknown command in pipe: invalidcommand"
-        }
+        public void testPipeCommandWithInvalidCommand () {
+                    String input = "mkdir testDir | invalidCommand";
+                    cmd.handlePipe(input); //"Unknown command in pipe: invalidcommand"
+                }
 
     }
 }

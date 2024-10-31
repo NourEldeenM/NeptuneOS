@@ -8,6 +8,12 @@ import java.util.Scanner;
 
 // Has all static methods
 public class cmd {
+
+    // format text in red
+    private static String redText(String s) {
+        return "\u001B[31m" + s + "\u001B[0m"; // Change color to red
+    }
+
     /**
      * Concatenates the contents of the files and prints the result. If we use cat with no
      * arguments, it will take input
@@ -351,16 +357,27 @@ public class cmd {
      * @author Moaz Mohamed
      */
     public static String ls(String[] tokens) {
+        // Set all booleans to false
+        Boolean all = false;
+        Boolean recursive = false;
 
-//        set all booleans to false
-        boolean all = false, recursive = false;
-
-//        check that line is for ls
+        // Check that line is for ls
         if (!tokens[0].contains("ls")) {
-            throw new IllegalArgumentException("Invalid command: The line must contain 'ls'");
+            return "Error: Invalid command: The line must contain 'ls' in first of the line";
         }
 
-//        set all boolean arguments
+        if (tokens.length > 3) {
+            return "Error: Your command must be in format of 'command -args attributes'";
+        }
+
+        if (tokens.length == 3 && tokens[2].contains("-")) {
+            String temp = tokens[1];
+            tokens[1] = tokens[2];
+            tokens[2] = temp;
+        }
+
+        int pathIndex = 1;
+        // Set all boolean arguments
         if (tokens.length > 1 && tokens[1].contains("-")) {
             for (char c : tokens[1].toCharArray()) {
                 if (c == '-') {
@@ -374,34 +391,40 @@ public class cmd {
                     recursive = true;
                     continue;
                 }
-                throw new IllegalArgumentException("This " + c + "argument didn't supported\n");
+                return "Error: This " + c + " argument isn't supported\n";
             }
+            pathIndex++;
         }
 
-        //extract path
-        String path = getPath(tokens);
-
-
-//      call display dir function that loop over files in given path
-        return displayDir(path, 0, all, recursive);
-    }
-
-    private static String getPath(String[] tokens) {
+        // Extract path
         String path = ".";
-        if (tokens.length >= 3) {
+        if (tokens.length > pathIndex) {
             int start = 0;
-            int end = tokens[2].length();
-            if (tokens[2].contains("\"") || tokens[2].contains("'")) {
+            int end = tokens[pathIndex].length();
+            if (tokens[pathIndex].contains("\"") || tokens[pathIndex].contains("'")) {
                 start++;
-                if (tokens[2].substring(start).contains("\"") || tokens[2].substring(start).contains("'")) {
+                if (tokens[pathIndex].substring(start).contains("\"") || tokens[pathIndex].substring(start).contains("'")) {
                     end--;
                 } else {
-                    throw new IllegalArgumentException("your path is not valid");
+                    return "Error: Your path is not valid";
                 }
             }
-            path = tokens[2].substring(start, end);
+            path = tokens[pathIndex].substring(start, end);
         }
-        return path;
+
+        File currentDir = new File(path);
+        if (!currentDir.exists()) {
+            return "Error: "+ path + " does not exist.\n";
+        }
+        if (!currentDir.isDirectory()) {
+            return "Error: '" + path + " is not a directory.\n";
+        }
+
+        // Call display dir function that loops over files in the given path
+        String ans = displayDir(path, 0, all, recursive);
+
+        // Return ans
+        return ans;
     }
 
     /**
@@ -418,16 +441,68 @@ public class cmd {
      *               specifies the file to which the output should be appended.
      * @author Moaz Mohamed
      */
-    public static void appendOutputToFile(String[] tokens) {
+    public static String appendOutputToFile(String[] tokens) {
         if (tokens.length < 3) {
-            throw new IllegalArgumentException("Output redirection should be in the format: command >> file");
+            return "Error: Output redirection should be in the format: command >> file";
         }
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tokens[2], true))) {
-            writer.write(tokens[0]);
-            writer.newLine();
+
+        // Line command >> file
+        String command = tokens[0];
+        String file = tokens[2];
+
+        File outputFile = new File(file);
+        if (!outputFile.exists()) {
+            return "Error: " + file + " does not exist.";
+        }
+        if (!outputFile.canWrite()) {
+            return "Error: " + file + " is read-only.";
+        }
+
+        StringBuilder line = new StringBuilder();
+
+        tokens = command.trim().split("\\s+");
+        String otherCommand = tokens[0].toLowerCase();
+        switch (otherCommand) {
+            case "cd":
+                line.append(cmd.cd(tokens));
+                break;
+            case "mv":
+                // Handle mv command if necessary
+                line.append(""); // Add implementation here if needed
+                break;
+            case "pwd":
+                line.append(cmd.pwd());
+                break;
+            case "rmdir":
+            case "rm":
+                // Handle rmdir and rm command if necessary
+                line.append(""); // Add implementation here if needed
+                break;
+            case "ls":
+                line.append(cmd.ls(tokens));
+                break;
+            case "cat":
+                line.append(cmd.cat(tokens));
+                break;
+            case "help":
+                line.append("help man\n");
+                break;
+            default:
+                return "Error: Unknown command.";
+        }
+
+        if (line.toString().contains("Error")) {
+            return line.toString();
+        }
+
+        try (FileWriter writer = new FileWriter(file, true)) {
+            writer.append(line.toString());
+            writer.append(System.lineSeparator());
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            return "Error: " + e.getMessage();
         }
+
+        return "Output successfully appended to " + file;
     }
 
     /**

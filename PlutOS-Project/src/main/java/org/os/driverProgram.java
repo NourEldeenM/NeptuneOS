@@ -5,22 +5,31 @@ import java.util.Scanner;
 
 public class driverProgram {
 
-    private static String whiteText() {
-        return "\u001B[37m" + " $ " + "\u001B[0m";
+//        Style text with white color
+    private static String whiteText(String s) {
+        return "\u001B[37m" + s + "\u001B[0m";
     }
 
+//        style text with blue text
     private static String blueText(String s) {
         return "\u001B[34m" + s + "\u001B[0m";
     }
+//     style to color text red
+    private static String redText(String s) {
+        return "\u001B[31m" + s + "\u001B[0m";
+    }
+
+
 
     public static void start() {
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            System.out.print(blueText(System.getProperty("user.dir")) + whiteText());
+            System.out.print(blueText(System.getProperty("user.dir")) + whiteText("$"));
             String input = scanner.nextLine();
             if (input.equals("exit")) {
                 break;
             }
+
             parseCommand(input);
         }
         scanner.close();
@@ -38,24 +47,25 @@ public class driverProgram {
         } else if (input.contains(">")) {
             command = ">";
         }
+        String output=null;
+
         switch (command) {
             case "cd":
-                cmd.cd(tokens);
+                output = cmd.cd(tokens);
                 break;
             case "mv":
                 cmd.mv(tokens);
                 break;
             case "pwd":
-                System.out.println(cmd.pwd());
-                break;
+                output = cmd.pwd();
             case "rmdir":
-                System.out.println(cmd.rmdir(tokens));
+                output = cmd.rmdir(tokens);
                 break;
             case "rm":
-                System.out.println(cmd.rm(tokens));
+                output = cmd.rm(tokens);
                 break;
             case "ls":
-                System.out.print(cmd.ls(tokens));
+                output = cmd.ls(tokens);
                 break;
             case ">>":
                 cmd.appendOutputToFile(tokens);
@@ -64,7 +74,7 @@ public class driverProgram {
                 cmd.forwardArrow(tokens);
                 break;
             case "cat":
-                System.out.println(cmd.cat(tokens));
+                output = cmd.cat(tokens);
                 break;
             case "help":
                 System.out.println(cmd.help());
@@ -75,8 +85,17 @@ public class driverProgram {
                 cmd.touchCommand(tokens);
                 break;
             default:
-                System.out.println("Unknown command: " + command);
+                output = "Error: Unknown command" + command;
         }
+
+        if (output != null && !output.isEmpty()) {
+            if(output.contains("Error")){
+                System.out.print(redText(output));
+            }else{
+                System.out.print(output);
+            }
+        }
+
     }
 }
 
