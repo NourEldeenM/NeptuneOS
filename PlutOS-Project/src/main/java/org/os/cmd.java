@@ -397,7 +397,7 @@ public class cmd {
         }
 
         // Extract path
-        String path = ".";
+        String path = System.getProperty("user.dir");
         if (tokens.length > pathIndex) {
             int start = 0;
             int end = tokens[pathIndex].length();
