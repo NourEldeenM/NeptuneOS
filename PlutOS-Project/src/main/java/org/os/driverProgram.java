@@ -6,8 +6,8 @@ import java.util.Scanner;
 public class driverProgram {
 
     //    Style text with white color
-    private static String whiteText(String s) {
-        return "\u001B[37m" + s + "\u001B[0m";
+    private static String whiteText() {
+        return "\u001B[37m" + " $ " + "\u001B[0m";
     }
 
     //    style text with blue text
@@ -18,7 +18,7 @@ public class driverProgram {
     public static void start() {
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            System.out.print(blueText(System.getProperty("user.dir")) + whiteText(" $ "));
+            System.out.print(blueText(System.getProperty("user.dir")) + whiteText());
             String input = scanner.nextLine();
             if (input.equals("exit")) {
                 break;
@@ -42,13 +42,13 @@ public class driverProgram {
         }
         switch (command) {
             case "cd":
-                System.out.println(cmd.cd(tokens));
+                cmd.cd(tokens);
                 break;
             case "mv":
                 cmd.mv(tokens);
                 break;
             case "pwd":
-                System.out.println(cmd.pwd(tokens));
+                System.out.println(cmd.pwd());
                 break;
             case "rmdir":
                 System.out.println(cmd.rmdir(tokens));
@@ -56,7 +56,6 @@ public class driverProgram {
             case "rm":
                 System.out.println(cmd.rm(tokens));
                 break;
-            // working on moaz's code
             case "ls":
                 System.out.print(cmd.ls(tokens));
                 break;
@@ -69,8 +68,8 @@ public class driverProgram {
             case "cat":
                 System.out.println(cmd.cat(tokens));
                 break;
-//            case "help":
-//                return help(tokens);
+            case "help":
+                System.out.println(cmd.help());
             case "mkdir":
                 cmd.mkdirCommand(tokens);
                 break;

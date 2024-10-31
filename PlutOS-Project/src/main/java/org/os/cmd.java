@@ -48,29 +48,15 @@ public class cmd {
      */
     public static void forwardArrow(String[] args) {
         try (FileWriter writer = new FileWriter(args[2])) {
-            String line;
-            switch (args[0]) {
-                case "cd":
-                    line = cmd.cd(args);
-                    break;
-                case "pwd":
-                    line = cmd.pwd(args);
-                    break;
-                case "rmdir", "rm":
-                    line = "";
-                    break;
-                case "ls":
-                    line = cmd.ls(args);
-                    break;
-                case "cat":
-                    line = cmd.cat(args);
-                    break;
-//            case "help":
-//                return help(tokens);
-                default:
-                    line = "Unknown command: " + args[0];
-                    break;
-            }
+            String line = switch (args[0]) {
+                case "cd" -> cmd.cd(args);
+                case "pwd" -> cmd.pwd();
+                case "rmdir", "rm" -> "";
+                case "ls" -> cmd.ls(args);
+                case "cat" -> cmd.cat(args);
+                case "help" -> cmd.help();
+                default -> "Unknown command: " + args[0];
+            };
             writer.write(line);
         } catch (IOException e) {
             System.err.println(e.getMessage());
@@ -81,7 +67,7 @@ public class cmd {
      * Changes current working directory to directory specified
      *
      * @param args contains directory that we will change to
-     * @return
+     * @return new directory name
      */
     public static String cd(String[] args) {
         String dirName = args[1];
@@ -153,11 +139,9 @@ public class cmd {
 
     /**
      * Prints the current working directory.
-     *
-     * @param tokens The tokens representing the command and its arguments.
      * @return The current directory as a string.
      */
-    public static String pwd(String[] tokens) {
+    public static String pwd() {
         return System.getProperty("user.dir");
     }
 
@@ -251,7 +235,7 @@ public class cmd {
 
         if (!file.canWrite() && !force) {
             // Prompt user for confirmation
-            System.out.print("File '" + file.getName() + "' is unwritable. Do you want to remove it? (y/n): ");
+            System.out.print("File '" + file.getName() + "' is not writable. Do you want to remove it? (y/n): ");
             Scanner scanner = new Scanner(System.in);
             String response = scanner.nextLine();
             if (!response.trim().toLowerCase().startsWith("y")) {
@@ -368,9 +352,8 @@ public class cmd {
      */
     public static String ls(String[] tokens) {
 
-//        set all booleans to flase
-        Boolean all = false;
-        Boolean recursive = false;
+//        set all booleans to false
+        boolean all = false, recursive = false;
 
 //        check that line is for ls
         if (!tokens[0].contains("ls")) {
@@ -396,6 +379,14 @@ public class cmd {
         }
 
         //extract path
+        String path = getPath(tokens);
+
+
+//      call display dir function that loop over files in given path
+        return displayDir(path, 0, all, recursive);
+    }
+
+    private static String getPath(String[] tokens) {
         String path = ".";
         if (tokens.length >= 3) {
             int start = 0;
@@ -410,13 +401,7 @@ public class cmd {
             }
             path = tokens[2].substring(start, end);
         }
-
-//        call display dir function that loop over files in given path
-        String ans = displayDir(path, 0, all, recursive);
-
-
-//      return ans
-        return ans;
+        return path;
     }
 
     /**
@@ -441,9 +426,10 @@ public class cmd {
             writer.write(tokens[0]);
             writer.newLine();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
+
     /**
      * Creates a new directory with the specified name.
      *
@@ -546,7 +532,7 @@ public class cmd {
                     lastOutput = cmd.ls(tokens);
                     break;
                 case "pwd":
-                    lastOutput = cmd.pwd(tokens);
+                    lastOutput = cmd.pwd();
                     break;
                 case "cat":
                     lastOutput = cmd.cat(tokens);
@@ -606,4 +592,46 @@ public class cmd {
         }
         return commandList.toArray(new String[0]);
     }
+
+    /**
+     * Prints a description of all available methods with their usage and required parameters.
+     *
+     * @return A string representing the list of all commands with their descriptions.
+     */
+    public static String help() {
+
+        return """
+                Available Commands:
+                
+                1. cat [file1 file2 ...]
+                   Concatenates the contents of the specified files and prints the result. If no file names are provided, it takes user input until '^C' is entered.
+                
+                2. forwardArrow [command] > [filename]
+                   Executes a command and saves its output to the specified file.
+                   Supported commands: cd, pwd, rmdir, rm, ls, cat, help.
+                
+                3. cd [directory]
+                   Changes the current working directory to the specified directory. Use '..' to move to the parent directory and '~' to go to the home directory.
+                
+                4. mv [sourceFile] [destinationFile]
+                   Moves the content of the source file to the destination file and deletes the source file.
+                
+                5. pwd
+                   Prints the current working directory.
+                
+                6. rmdir [directory]
+                   Removes an empty directory with the specified name.
+                
+                7. rm [options] [file/directory]
+                   Deletes the specified file or directory. Use '-r' for recursive deletion of directories and '-f' to force delete.
+                
+                8. ls [options] [path]
+                   Lists the contents of the specified directory.
+                   Options: '-a' to include hidden files, '-r' for recursive listing.
+                
+                9. help
+                   Displays this help information for all commands.
+                """;
+    }
+
 }

@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.Test;
 import org.os.cmd;
-import org.os.driverProgram;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -12,7 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.os.cmd.mkdirCommand;
+
 
 public class cmdTest {
 
@@ -60,7 +59,7 @@ public class cmdTest {
             cmd.forwardArrow(args);
 
             String content = new String(Files.readAllBytes(Paths.get(fileName)));
-            String value = cmd.pwd(args);
+            String value = cmd.pwd();
 
             assertEquals(content, value, "The content in the file should match the input.");
         }
@@ -184,8 +183,7 @@ public class cmdTest {
     class pwdCommandTests {
         @Test
         public void testPwd() {
-            String[] tokens = {"pwd"};
-            String result = cmd.pwd(tokens);
+            String result = cmd.pwd();
             String expectedDir = System.getProperty("user.dir");
             assertEquals(expectedDir, result, "PWD command failed");
         }
@@ -256,7 +254,6 @@ public class cmdTest {
             assertEquals("Directory 'testDirRecursive' deleted.", result, "RM command failed on recursive directory deletion");
         }
     }
-
 
     @Nested
     class mkdirTest {
@@ -367,6 +364,7 @@ public class cmdTest {
             assertTrue(new File(System.getProperty("user.dir"), "testDir").exists());
             assertTrue(new File(System.getProperty("user.dir"), TEST_FILE_NAME).exists());
         }
+
         // add more pipe tests
         @Test
         public void testPipeCommandWithInvalidCommand() {
@@ -375,6 +373,4 @@ public class cmdTest {
         }
 
     }
-
-
 }
