@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.Test;
 import org.os.cmd;
+import org.os.driverProgram;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -11,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.os.cmd.mkdirCommand;
 
 public class cmdTest {
 
@@ -261,4 +263,125 @@ public class cmdTest {
             assertEquals("Directory 'testDirRecursive' deleted.", result, "RM command failed on recursive directory deletion");
         }
     }
+
+
+    @Nested
+    class mkdirTest {
+        private String basePath;
+
+        @BeforeEach
+        public void setup() {
+            basePath = System.getProperty("user.dir") + File.separator;
+        }
+
+        @Test
+        public void testMkdirEmptyPath() {
+            String dirName = "emptyDir_" + System.currentTimeMillis();
+            String[] tokens = {"mkdir", dirName};
+            String result = cmd.mkdirCommand(tokens);
+            String expectedPath = basePath + dirName;
+            assertEquals("Directory '" + dirName + "' created at " + expectedPath, result);
+            new File(expectedPath).delete();
+        }
+
+        @Test
+        public void testMkdirWithValidName() {
+            String dirName = "testDir_" + System.currentTimeMillis();
+            String[] tokens = {"mkdir", dirName};
+            new File(basePath + dirName).mkdir();
+            String result = cmd.mkdirCommand(tokens);
+            assertEquals("Error: Directory already exists.", result);
+            new File(basePath + dirName).delete();
+        }
+
+        @Test
+        public void testMkdirCustomPath() {
+            String dirName = "some" + File.separator + "custom" + File.separator + "nestedDir_" + System.currentTimeMillis();
+            String[] tokens = {"mkdir", dirName};
+            String result = cmd.mkdirCommand(tokens);
+            String expectedPath = basePath + dirName;
+            assertEquals("Directory '" + dirName + "' created at " + expectedPath, result);
+            new File(expectedPath).delete();
+        }
+
+        @Test
+        public void testMkdirWithExistingDir() {
+            String dirName = "existingDir_" + System.currentTimeMillis();
+            String[] tokens = {"mkdir", dirName};
+            new File(basePath + dirName).mkdir();
+            String result = cmd.mkdirCommand(tokens);
+            assertEquals("Error: Directory already exists.", result);
+            new File(basePath + dirName).delete();
+        }
+
+        @Test
+        public void testMkdirWithEmptyName() {
+            String[] tokens = {"mkdir", ""};
+            String result = cmd.mkdirCommand(tokens);
+            assertEquals("Error: Invalid directory name.", result);
+        }
+
+        @Test
+        public void testMkdirWithSpecialCharacters() {
+            String dirName = "dir@123_" + System.currentTimeMillis();
+            String[] tokens = {"mkdir", dirName};
+            String result = cmd.mkdirCommand(tokens);
+            String expectedPath = basePath + dirName;
+            assertEquals("Directory '" + dirName + "' created at " + expectedPath, result);
+            new File(expectedPath).delete();
+        }
+    }
+
+    private static final String TEST_FILE_NAME = "testFile.txt";
+
+    @Nested
+    public class touchTest {
+        private static final String TEST_FILE_NAME = "testFile.txt";
+        private File testFile;
+
+        @BeforeEach
+        public void setUp() {
+            testFile = new File(System.getProperty("user.dir"), TEST_FILE_NAME);
+            if (testFile.exists()) {
+                testFile.delete();  // clean up 2bl kol test
+            }
+        }
+
+        @Test
+        public void testTouchCommandCreatesFile() {
+            String[] tokens = {"touch", TEST_FILE_NAME};
+            String result = cmd.touchCommand(tokens);
+            assertEquals("File 'testFile.txt' created successfully.", result);
+            assertTrue(testFile.exists());
+        }
+
+        @Test
+        public void testTouchCommandUpdatesFile() throws IOException {
+            Files.createFile(Paths.get(System.getProperty("user.dir"), TEST_FILE_NAME));
+
+            String[] tokens = {"touch", TEST_FILE_NAME};
+            String result = cmd.touchCommand(tokens);
+            assertEquals("File 'testFile.txt' updated successfully.", result);
+        }
+    }
+
+    @Nested
+    public class pipeTest {
+        @Test
+        public void testPipeCommandWithMkdirAndTouch() {
+            String input = "mkdir testDir | touch testFile.txt";
+            cmd.handlePipe(input);
+            assertTrue(new File(System.getProperty("user.dir"), "testDir").exists());
+            assertTrue(new File(System.getProperty("user.dir"), TEST_FILE_NAME).exists());
+        }
+        // add more pipe tests
+        @Test
+        public void testPipeCommandWithInvalidCommand() {
+            String input = "mkdir testDir | invalidCommand";
+            cmd.handlePipe(input); //"Unknown command in pipe: invalidcommand"
+        }
+
+    }
+
+
 }

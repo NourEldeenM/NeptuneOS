@@ -5,12 +5,12 @@ import java.util.Scanner;
 
 public class driverProgram {
 
-//    Style text with white color
+    //    Style text with white color
     private static String whiteText(String s) {
         return "\u001B[37m" + s + "\u001B[0m";
     }
 
-//    style text with blue text
+    //    style text with blue text
     private static String blueText(String s) {
         return "\u001B[34m" + s + "\u001B[0m";
     }
@@ -29,11 +29,15 @@ public class driverProgram {
         scanner.close();
     }
 
-    private static void parseCommand(String input) {
+    public static void parseCommand(String input) {
         String[] tokens = input.trim().split("\\s+");
         String command = tokens[0].toLowerCase();
-        if(input.contains(">>")){
-            command=">>";
+        if (input.contains(">>")) {
+            command = ">>";
+        }
+        if (input.contains("|")) {
+            cmd.handlePipe(input);
+            return;
         }
         switch (command) {
             case "cd":
@@ -71,8 +75,17 @@ public class driverProgram {
 //                break;
 //            case "help":
 //                return help(tokens);
+            case "mkdir":
+                cmd.mkdirCommand(tokens);
+                break;
+            case "touch":
+                cmd.touchCommand(tokens);
+                break;
             default:
                 System.out.println("Unknown command: " + command);
         }
     }
+
+
 }
+
