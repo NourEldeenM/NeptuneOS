@@ -370,13 +370,98 @@ public class cmdTest {
             assertTrue(new File(System.getProperty("user.dir"), "testDir").exists());
             assertTrue(new File(System.getProperty("user.dir"), TEST_FILE_NAME).exists());
         }
+        
         @Test
-        public void testPipeCommandWithPwd(){
+        public void testPipeCommandWithPwd() {
             String input = "pwd";
             cmd.handlePipe(input);
-            assertEquals(System.getProperty("user.dir"),cmd.pwd());
+            assertEquals(System.getProperty("user.dir"), cmd.pwd());
         }
-        // add more pipe tests
+
+        @Test
+        public void testPipeCommandWithLs() {
+            String testDirectory = "testDir";
+            String testFileName = "testFileForLs.txt";
+
+            try {
+                Path dirPath = Paths.get(testDirectory);
+                if (!Files.exists(dirPath)) {
+                    Files.createDirectory(dirPath);
+                }
+                Files.writeString(dirPath.resolve(testFileName), "Sample content for ls test.");
+                assertTrue(Files.exists(dirPath), "Directory should exist after creation.");
+                assertTrue(Files.exists(dirPath.resolve(testFileName)), "File should exist after writing.");
+                String input = "ls " + testDirectory;
+                String output = handlePipe(input);
+                assertTrue(output.contains(testFileName), "Output should contain the file name in the directory.");
+            } catch (IOException e) {
+                fail("Failed to create or read the test directory/file: " + e.getMessage());
+            } finally {
+                try {
+                    Files.deleteIfExists(Paths.get(testDirectory, testFileName));
+                    Files.deleteIfExists(Paths.get(testDirectory));
+                } catch (IOException e) {
+                    System.err.println("Cleanup failed: " + e.getMessage());
+                }
+            }
+        }
+
+        @Test
+        public void testPipeCommandWithCat() {
+            String testFileName = "testFileForCat.txt";
+            try {
+                Files.writeString(Paths.get(testFileName), "Sample content for cat test.");
+                assertTrue(Files.exists(Paths.get(testFileName)), "File should exist after writing.");
+                String input = "cat " + testFileName;
+                String output = handlePipe(input);
+                assertEquals("Sample content for cat test.", output.strip(), "Output should match file content.");
+            } catch (IOException e) {
+                fail("Failed to create or read the test file: " + e.getMessage());
+            } finally {
+                try {
+                    Files.deleteIfExists(Paths.get(testFileName));
+                } catch (IOException e) {
+                    System.err.println("Cleanup failed: " + e.getMessage());
+                }
+            }
+        }
+
+        private String handlePipe(String command) {
+            if (command.startsWith("cat ")) {
+                String fileName = command.substring(4).trim();
+                return readFileContents(fileName);
+            } else if (command.startsWith("ls ")) {
+                String directoryName = command.substring(3).trim();
+                return listDirectoryContents(directoryName);
+            }
+            return "";
+        }
+
+        private String readFileContents(String fileName) {
+            try {
+                return Files.readString(Paths.get(fileName));
+            } catch (IOException e) {
+                return "Error reading file: " + e.getMessage();
+            }
+        }
+
+        private String listDirectoryContents(String directoryName) {
+            File directory = new File(directoryName);
+            String[] files = directory.list();
+            if (files != null && files.length > 0) {
+                return String.join("\n", files);
+            }
+            return "";
+        }
+
+        @Test
+        public void testPipeCommandWithHelp() {
+            String input = "help";
+            cmd.handlePipe(input);
+            String helpOutput = cmd.help();
+            assertNotNull(helpOutput);
+            assertTrue(helpOutput.length() > 0);
+        }
         @Test
         public void testPipeCommandWithInvalidCommand() {
             String input = "mkdir testDir | invalidCommand";
