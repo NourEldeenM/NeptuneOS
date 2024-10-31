@@ -499,6 +499,7 @@ public class cmd {
         return "Error: Could not create or update the file '" + fileName + "'.";
     }
 
+   
     /**
      * Executes a series of commands separated by pipes ("|").
      * Each command is processed in order, and the output of each
@@ -507,13 +508,14 @@ public class cmd {
      * @param input A string of commands separated by pipes.
      */
     public static void handlePipe(String input) {
-        // Use the pipe function to split commands
         String[] commands = pipe(input);
         String lastOutput = "";
 
-        for (String command : commands) {
-            String[] tokens = command.trim().split("\\s+");
+        for (int i = 0; i < commands.length; i++) {
+            String command = commands[i].trim();
+            String[] tokens = command.split("\\s+");
             String commandName = tokens[0].toLowerCase();
+
             switch (commandName) {
                 case "ls":
                     lastOutput = cmd.ls(tokens);
@@ -524,6 +526,9 @@ public class cmd {
                 case "cat":
                     lastOutput = cmd.cat(tokens);
                     break;
+                case "grep":
+                    lastOutput = cmd.grep(tokens, lastOutput);
+                    break;
                 case "mkdir":
                     System.out.println(cmd.mkdirCommand(tokens));
                     lastOutput = "";
@@ -532,37 +537,33 @@ public class cmd {
                     System.out.println(cmd.touchCommand(tokens));
                     lastOutput = "";
                     break;
-                case "cd":
-                    cmd.cd(tokens);
-                    lastOutput = "";
-                    break;
-                case "mv":
-                    cmd.mv(tokens);
-                    lastOutput = "";
-                    break;
-                case "rm":
-                    System.out.println(cmd.rm(tokens));
-                    lastOutput = "";
-                    break;
-                case "rmdir":
-                    System.out.println(cmd.rmdir(tokens));
-                    lastOutput = "";
-                    break;
-                case ">>":
-                    cmd.appendOutputToFile(tokens);
-                    lastOutput = "";
-                    break;
-                case ">":
-                    cmd.forwardArrow(tokens);
-                    lastOutput = "";
-                    break;
                 default:
                     System.out.println("Unknown command in pipe: " + commandName);
             }
         }
+        // Print the last output if it's not empty
         if (!lastOutput.isEmpty()) {
             System.out.println(lastOutput);
         }
+    }
+    /**
+     * Filters lines from the input that contain the specified pattern.
+     * This method is used to display only matching lines from previous command outputs.
+     * @param tokens An array of ("grep") and pattern we're searching for.
+     * @param input  A string containing lines to be searched.
+     * @return A string with lines that match the pattern, or an empty one.
+     */
+    public static String grep(String[] tokens, String input) {
+        String pattern = tokens.length > 1 ? tokens[1] : "";
+        String[] lines = input.split("\n");
+        StringBuilder output = new StringBuilder();
+
+        for (String line : lines) {
+            if (line.contains(pattern)) {
+                output.append(line).append("\n");
+            }
+        }
+        return output.toString().trim();
     }
 
     /**
