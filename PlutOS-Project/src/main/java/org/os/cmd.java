@@ -469,41 +469,52 @@ public class cmd {
         String command = tokens[0];
         String file = tokens[2];
 
+        File outputFile = new File(file);
+        if (!outputFile.exists()) {
+            return "Error: " + file + " does not exist.";
+        }
+        if (!outputFile.canWrite()) {
+            return "Error: " + file + " is read-only.";
+        }
+
         StringBuilder line = new StringBuilder();
 
+        tokens = command.trim().split("\\s+");
+        String otherCommand = tokens[0].toLowerCase();
+        switch (otherCommand) {
+            case "cd":
+                line.append(cmd.cd(tokens));
+                break;
+            case "mv":
+                // Handle mv command if necessary
+                line.append(""); // Add implementation here if needed
+                break;
+            case "pwd":
+                line.append(cmd.pwd(tokens));
+                break;
+            case "rmdir":
+            case "rm":
+                // Handle rmdir and rm command if necessary
+                line.append(""); // Add implementation here if needed
+                break;
+            case "ls":
+                line.append(cmd.ls(tokens));
+                break;
+            case "cat":
+                line.append(cmd.cat(tokens));
+                break;
+            case "help":
+                line.append("help man\n");
+                break;
+            default:
+                return "Error: Unknown command.";
+        }
+
+        if (line.toString().contains("Error")) {
+            return line.toString();
+        }
+
         try (FileWriter writer = new FileWriter(file, true)) {
-            tokens = command.trim().split("\\s+");
-            String otherCommand = tokens[0].toLowerCase();
-
-            switch (otherCommand) {
-                case "cd":
-                    line.append(cmd.cd(tokens));
-                    break;
-                case "mv":
-                    // Handle mv command if necessary
-                    line.append(""); // Add implementation here if needed
-                    break;
-                case "pwd":
-                    line.append(cmd.pwd(tokens));
-                    break;
-                case "rmdir":
-                case "rm":
-                    // Handle rmdir and rm command if necessary
-                    line.append(""); // Add implementation here if needed
-                    break;
-                case "ls":
-                    line.append(cmd.ls(tokens));
-                    break;
-                case "cat":
-                    line.append(cmd.cat(tokens));
-                    break;
-                case "help":
-                    line.append("help man\n");
-                    break;
-                default:
-                    return "Error: Unknown command: " + tokens[0];
-            }
-
             writer.append(line.toString());
             writer.append(System.lineSeparator());
         } catch (IOException e) {
@@ -512,5 +523,8 @@ public class cmd {
 
         return "Output successfully appended to " + file;
     }
+
+
+
 
 }

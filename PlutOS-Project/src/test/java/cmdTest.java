@@ -357,8 +357,72 @@ public class cmdTest {
             new File(nestedDir, "nestedFile.txt").delete();
             nestedDir.delete();
         }
+
     }
 
+    @Nested
+    class AppendOutputToFileTests {
 
+        private final String testFilePath = "outputTest.txt";
+        private final String testDirPath = "testDir";
+
+        @BeforeEach
+        public void setUp() throws IOException {
+            new File(testDirPath).mkdir();
+
+            File testFile = new File(testFilePath);
+            if (!testFile.exists()) {
+                testFile.createNewFile();
+            }
+        }
+
+        @AfterEach
+        public void tearDown() {
+            File testFile = new File(testFilePath);
+            if (testFile.exists()) {
+                testFile.delete();
+            }
+            File testDir = new File(testDirPath);
+            if (testDir.exists()) {
+                testDir.delete();
+            }
+        }
+
+        @Test
+        public void testAppendOutputToFileWithValidCommand() throws IOException {
+            String result = cmd.appendOutputToFile(new String[]{"pwd", ">>", testFilePath});
+
+            assertEquals("Output successfully appended to outputTest.txt", result);
+
+            String content = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(testFilePath)));
+            assertTrue(content.contains(System.getProperty("user.dir")), "Output file should contain the current directory path.");
+        }
+
+        @Test
+        public void testAppendOutputToFileWithUnknownCommand() {
+            String result = cmd.appendOutputToFile(new String[]{"unknownCommand", ">>", testFilePath});
+            assertEquals("Error: Unknown command.", result);
+        }
+
+        @Test
+        public void testAppendOutputToFileWithInsufficientArguments() {
+            String result = cmd.appendOutputToFile(new String[]{"ls", ">>"});
+            assertEquals("Error: Output redirection should be in the format: command >> file", result);
+        }
+
+        @Test
+        public void testAppendOutputToFileWithExistingFile() throws IOException {
+            try (FileWriter writer = new FileWriter(testFilePath)) {
+                writer.write("Existing content\n");
+            }
+
+            String result = cmd.appendOutputToFile(new String[]{"pwd", ">>", testFilePath});
+            assertEquals("Output successfully appended to outputTest.txt", result);
+
+            String content = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(testFilePath)));
+            assertTrue(content.contains("Existing content"), "Output file should still contain the existing content.");
+            assertTrue(content.contains(System.getProperty("user.dir")), "Output file should contain the current directory path.");
+        }
+    }
 
 }
