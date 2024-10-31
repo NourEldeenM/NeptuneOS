@@ -55,21 +55,14 @@ public class cmdTest {
 
         @Test
         void testForwardArrowWritesContentToFile() throws IOException {
-            String[] args = {"ignored", "Hello, world!", fileName};
+            String[] args = {"pwd", ">", fileName};
 
             cmd.forwardArrow(args);
 
             String content = new String(Files.readAllBytes(Paths.get(fileName)));
+            String value = cmd.pwd(args);
 
-            assertEquals("Hello, world!", content, "The content in the file should match the input.");
-        }
-
-        @Test
-        void testForwardArrowEmptyContent() throws IOException {
-            String[] args = {"ignored", "", fileName};
-            cmd.forwardArrow(args);
-            String content = new String(Files.readAllBytes(Paths.get(fileName)));
-            assertEquals("", content, "The file should be empty if no content is provided.");
+            assertEquals(content, value, "The content in the file should match the input.");
         }
 
         @Test

@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 
-
-
 // Has all static methods
 public class cmd {
     /**
@@ -55,16 +53,12 @@ public class cmd {
                 case "cd":
                     line = cmd.cd(args);
                     break;
-//                case "mv":
-//                    line = cmd.mv(args);
-//                    break;
                 case "pwd":
                     line = cmd.pwd(args);
                     break;
                 case "rmdir", "rm":
                     line = "";
                     break;
-                // working on moaz's code
                 case "ls":
                     line = cmd.ls(args);
                     break;
@@ -480,7 +474,6 @@ public class cmd {
         }
     }
 
-
     /**
      * Creates a new file or updates the last modified time of an existing file.
      *
@@ -519,7 +512,6 @@ public class cmd {
 
         return "Error: Could not create or update the file '" + fileName + "'.";
     }
-
 
     /**
      * Executes a command based on the command tokens provided.

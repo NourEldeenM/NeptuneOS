@@ -80,9 +80,6 @@ public class driverProgram {
             default:
                 System.out.println("Unknown command: " + command);
         }
-        return "";
     }
-
-
 }
 
