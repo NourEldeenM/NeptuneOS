@@ -19,8 +19,6 @@ public class driverProgram {
         return "\u001B[31m" + s + "\u001B[0m";
     }
 
-
-
     public static void start() {
         Scanner scanner = new Scanner(System.in);
         while (true) {
@@ -58,6 +56,7 @@ public class driverProgram {
                 break;
             case "pwd":
                 output = cmd.pwd();
+                break;
             case "rmdir":
                 output = cmd.rmdir(tokens);
                 break;
@@ -90,9 +89,9 @@ public class driverProgram {
 
         if (output != null && !output.isEmpty()) {
             if(output.contains("Error")){
-                System.out.print(redText(output));
+                System.out.println(redText(output));
             }else{
-                System.out.print(output);
+                System.out.println(output);
             }
         }
 

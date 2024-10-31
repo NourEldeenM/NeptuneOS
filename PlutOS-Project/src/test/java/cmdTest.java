@@ -24,7 +24,7 @@ public class cmdTest {
             Files.writeString(file1, "file1\n");
             Files.writeString(file2, "file2\n");
 
-            String result = cmd.cat(new String[]{file1.toString(), file2.toString()});
+            String result = cmd.cat(new String[]{"ignored", file1.toString(), file2.toString()});
 
             String expectedOutput = "file1\nfile2\n"; // verify output
             assertEquals(expectedOutput, result);

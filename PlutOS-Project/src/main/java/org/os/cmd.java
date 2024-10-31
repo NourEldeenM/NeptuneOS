@@ -34,7 +34,9 @@ public class cmd {
             return "";
         }
         StringBuilder output = new StringBuilder();
-        for (String fileName : args) {
+        for (int i = 1; i < args.length; i++) {
+            String fileName = args[i];
+            System.out.println(fileName);
             try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
