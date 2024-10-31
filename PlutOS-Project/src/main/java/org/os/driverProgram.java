@@ -24,7 +24,7 @@ public class driverProgram {
     public static void start() {
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            System.out.print(blueText(System.getProperty("user.dir")) + whiteText(" $ "));
+            System.out.print(blueText(System.getProperty("user.dir")) + whiteText("$"));
             String input = scanner.nextLine();
             if (input.equals("exit")) {
                 break;
@@ -35,11 +35,15 @@ public class driverProgram {
         scanner.close();
     }
 
-    public static String parseCommand(String input) {
+    public static void parseCommand(String input) {
         String[] tokens = input.trim().split("\\s+");
         String command = tokens[0].toLowerCase();
         if (input.contains(">>")) {
             command = ">>";
+        }
+        if (input.contains("|")) {
+            cmd.handlePipe(input);
+            return;
         } else if (input.contains(">")) {
             command = ">";
         }
@@ -53,8 +57,7 @@ public class driverProgram {
                 cmd.mv(tokens);
                 break;
             case "pwd":
-                output = cmd.pwd(tokens);
-                break;
+                output = cmd.pwd();
             case "rmdir":
                 output = cmd.rmdir(tokens);
                 break;
@@ -73,8 +76,14 @@ public class driverProgram {
             case "cat":
                 output = cmd.cat(tokens);
                 break;
-            // case "help":
-            //     return help(tokens);
+            case "help":
+                System.out.println(cmd.help());
+            case "mkdir":
+                cmd.mkdirCommand(tokens);
+                break;
+            case "touch":
+                cmd.touchCommand(tokens);
+                break;
             default:
                 output = "Error: Unknown command" + command;
         }
@@ -87,6 +96,6 @@ public class driverProgram {
             }
         }
 
-        return "";
     }
 }
+

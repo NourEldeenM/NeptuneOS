@@ -1,9 +1,10 @@
 package org.os;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
-
 
 // Has all static methods
 public class cmd {
@@ -53,33 +54,15 @@ public class cmd {
      */
     public static void forwardArrow(String[] args) {
         try (FileWriter writer = new FileWriter(args[2])) {
-            String line;
-            switch (args[0]) {
-                case "cd":
-                    line = cmd.cd(args);
-                    break;
-//                case "mv":
-//                    line = cmd.mv(args);
-//                    break;
-                case "pwd":
-                    line = cmd.pwd(args);
-                    break;
-                case "rmdir", "rm":
-                    line = "";
-                    break;
-                // working on moaz's code
-                case "ls":
-                    line = cmd.ls(args);
-                    break;
-                case "cat":
-                    line = cmd.cat(args);
-                    break;
-//            case "help":
-//                return help(tokens);
-                default:
-                    line = "Unknown command: " + args[0];
-                    break;
-            }
+            String line = switch (args[0]) {
+                case "cd" -> cmd.cd(args);
+                case "pwd" -> cmd.pwd();
+                case "rmdir", "rm" -> "";
+                case "ls" -> cmd.ls(args);
+                case "cat" -> cmd.cat(args);
+                case "help" -> cmd.help();
+                default -> "Unknown command: " + args[0];
+            };
             writer.write(line);
         } catch (IOException e) {
             System.err.println(e.getMessage());
@@ -90,7 +73,7 @@ public class cmd {
      * Changes current working directory to directory specified
      *
      * @param args contains directory that we will change to
-     * @return
+     * @return new directory name
      */
     public static String cd(String[] args) {
         String dirName = args[1];
@@ -162,11 +145,9 @@ public class cmd {
 
     /**
      * Prints the current working directory.
-     *
-     * @param tokens The tokens representing the command and its arguments.
      * @return The current directory as a string.
      */
-    public static String pwd(String[] tokens) {
+    public static String pwd() {
         return System.getProperty("user.dir");
     }
 
@@ -260,7 +241,7 @@ public class cmd {
 
         if (!file.canWrite() && !force) {
             // Prompt user for confirmation
-            System.out.print("File '" + file.getName() + "' is unwritable. Do you want to remove it? (y/n): ");
+            System.out.print("File '" + file.getName() + "' is not writable. Do you want to remove it? (y/n): ");
             Scanner scanner = new Scanner(System.in);
             String response = scanner.nextLine();
             if (!response.trim().toLowerCase().startsWith("y")) {
@@ -490,7 +471,7 @@ public class cmd {
                 line.append(""); // Add implementation here if needed
                 break;
             case "pwd":
-                line.append(cmd.pwd(tokens));
+                line.append(cmd.pwd());
                 break;
             case "rmdir":
             case "rm":
@@ -524,7 +505,196 @@ public class cmd {
         return "Output successfully appended to " + file;
     }
 
+    /**
+     * Creates a new directory with the specified name.
+     *
+     * @param tokens The tokens representing the command and its arguments.
+     * @return A success or error message indicating the result of the operation.
+     */
+    public static String mkdirCommand(String[] tokens) {
+        // Check if the directory name is provided (and not empty)
+        if (tokens.length < 2 || tokens[1].isEmpty()) {
+            return "Error: Invalid directory name.";
+        }
 
+        String dirName = tokens[1]; // Second token: directory name
+        String path = tokens.length > 2 ? tokens[2] : System.getProperty("user.dir");
 
+        File directory = new File(path, dirName);
+
+        System.out.println("Path provided: " + path);
+        System.out.println("Directory absolute path: " + directory.getAbsolutePath());
+
+        if (directory.exists()) {
+            return "Error: Directory already exists.";
+        }
+        if (directory.mkdirs()) { // Use mkdirs to create any necessary parent directories
+            return "Directory '" + dirName + "' created at " + directory.getAbsolutePath();
+        } else {
+            return "Error: Could not create directory.";
+        }
+    }
+
+    /**
+     * Creates a new file or updates the last modified time of an existing file.
+     *
+     * @param tokens The tokens representing the command and its arguments.
+     * @return A success or error message indicating the result of the operation.
+     */
+    public static String touchCommand(String[] tokens) {
+        if (tokens.length < 2) {
+            return "Error: File name not provided.";
+        }
+
+        String fileName = tokens[1];
+
+        // Remove surrounding quotes if present
+        if ((fileName.startsWith("\"") && fileName.endsWith("\"")) ||
+                (fileName.startsWith("'") && fileName.endsWith("'"))) {
+            fileName = fileName.substring(1, fileName.length() - 1);
+        }
+
+        File file = new File(System.getProperty("user.dir"), fileName);
+        try {
+            if (!file.exists()) {
+                if (file.createNewFile()) {
+                    return "File '" + fileName + "' created successfully.";
+                }
+            } else {
+                if (file.setLastModified(System.currentTimeMillis())) {
+                    return "File '" + fileName + "' updated successfully.";
+                } else {
+                    return "Error: Could not update the file '" + fileName + "'.";
+                }
+            }
+        } catch (IOException e) {
+            return "Error: " + e.getMessage();
+        }
+
+        return "Error: Could not create or update the file '" + fileName + "'.";
+    }
+
+    /**
+     * Executes a series of commands separated by pipes ("|").
+     * Each command is processed in order, and the output of each
+     * command is displayed to the user.
+     *
+     * @param input A string of commands separated by pipes.
+     */
+    public static void handlePipe(String input) {
+        String[] commands = pipe(input);
+        String lastOutput = "";
+
+        for (String s : commands) {
+            String command = s.trim();
+            String[] tokens = command.split("\\s+");
+            String commandName = tokens[0].toLowerCase();
+
+            switch (commandName) {
+                case "ls":
+                    lastOutput = cmd.ls(tokens);
+                    break;
+                case "pwd":
+                    lastOutput = cmd.pwd();
+                    break;
+                case "cat":
+                    lastOutput = cmd.cat(tokens);
+                    break;
+                case "grep":
+                    lastOutput = cmd.grep(tokens, lastOutput);
+                    break;
+                case "mkdir":
+                    System.out.println(cmd.mkdirCommand(tokens));
+                    lastOutput = "";
+                    break;
+                case "touch":
+                    System.out.println(cmd.touchCommand(tokens));
+                    lastOutput = "";
+                    break;
+                default:
+                    System.out.println("Unknown command in pipe: " + commandName);
+            }
+        }
+        // Print the last output if it's not empty
+        if (!lastOutput.isEmpty()) {
+            System.out.println(lastOutput);
+        }
+    }
+
+    /**
+     * Filters lines from the input that contain the specified pattern.
+     * This method is used to display only matching lines from previous command outputs.
+     * @param tokens An array of ("grep") and pattern we're searching for.
+     * @param input  A string containing lines to be searched.
+     * @return A string with lines that match the pattern, or an empty one.
+     */
+    public static String grep(String[] tokens, String input) {
+        String pattern = tokens.length > 1 ? tokens[1] : "";
+        String[] lines = input.split("\n");
+        StringBuilder output = new StringBuilder();
+
+        for (String line : lines) {
+            if (line.contains(pattern)) {
+                output.append(line).append("\n");
+            }
+        }
+        return output.toString().trim();
+    }
+
+    /**
+     * Splits an input string into commands using the pipe character ("|").
+     *
+     * @param input A string of commands separated by pipes.
+     * @return An array of commands as strings.
+     */
+    public static String[] pipe(String input) {
+        String[] commands = input.split("\\|");
+        List<String> commandList = new ArrayList<>();
+        for (String command : commands) {
+            commandList.add(command.trim());
+        }
+        return commandList.toArray(new String[0]);
+    }
+
+    /**
+     * Prints a description of all available methods with their usage and required parameters.
+     *
+     * @return A string representing the list of all commands with their descriptions.
+     */
+    public static String help() {
+
+        return """
+                Available Commands:
+                
+                1. cat [file1 file2 ...]
+                   Concatenates the contents of the specified files and prints the result. If no file names are provided, it takes user input until '^C' is entered.
+                
+                2. forwardArrow [command] > [filename]
+                   Executes a command and saves its output to the specified file.
+                   Supported commands: cd, pwd, rmdir, rm, ls, cat, help.
+                
+                3. cd [directory]
+                   Changes the current working directory to the specified directory. Use '..' to move to the parent directory and '~' to go to the home directory.
+                
+                4. mv [sourceFile] [destinationFile]
+                   Moves the content of the source file to the destination file and deletes the source file.
+                
+                5. pwd
+                   Prints the current working directory.
+                
+                6. rmdir [directory]
+                   Removes an empty directory with the specified name.
+                
+                7. rm [options] [file/directory]
+                   Deletes the specified file or directory. Use '-r' for recursive deletion of directories and '-f' to force delete.
+                
+                8. ls [options] [path]
+                   Lists the contents of the specified directory.
+                   Options: '-a' to include hidden files, '-r' for recursive listing.
+                
+                9. help
+                   Displays this help information for all commands.
+                """;
+    }
 
 }
