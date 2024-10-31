@@ -1,8 +1,11 @@
 package org.os;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
+
 
 
 // Has all static methods
@@ -446,5 +449,169 @@ public class cmd {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    /**
+     * Creates a new directory with the specified name.
+     *
+     * @param tokens The tokens representing the command and its arguments.
+     * @return A success or error message indicating the result of the operation.
+     */
+    public static String mkdirCommand(String[] tokens) {
+        // Check if the directory name is provided (and not empty)
+        if (tokens.length < 2 || tokens[1].isEmpty()) {
+            return "Error: Invalid directory name.";
+        }
+
+        String dirName = tokens[1]; // Second token: directory name
+        String path = tokens.length > 2 ? tokens[2] : System.getProperty("user.dir");
+
+        File directory = new File(path, dirName);
+
+        System.out.println("Path provided: " + path);
+        System.out.println("Directory absolute path: " + directory.getAbsolutePath());
+
+        if (directory.exists()) {
+            return "Error: Directory already exists.";
+        }
+        if (directory.mkdir()) {
+            return "Directory '" + dirName + "' created at " + directory.getAbsolutePath();
+        } else {
+            return "Error: Could not create directory.";
+        }
+    }
+
+
+    /**
+     * Creates a new file or updates the last modified time of an existing file.
+     *
+     * @param tokens The tokens representing the command and its arguments.
+     * @return A success or error message indicating the result of the operation.
+     */
+    public static String touchCommand(String[] tokens) {
+        if (tokens.length < 2) {
+            return "Error: File name not provided.";
+        }
+
+        String fileName = tokens[1];
+
+        // Remove surrounding quotes if present
+        if ((fileName.startsWith("\"") && fileName.endsWith("\"")) ||
+                (fileName.startsWith("'") && fileName.endsWith("'"))) {
+            fileName = fileName.substring(1, fileName.length() - 1);
+        }
+
+        File file = new File(System.getProperty("user.dir"), fileName);
+        try {
+            if (!file.exists()) {
+                if (file.createNewFile()) {
+                    return "File '" + fileName + "' created successfully.";
+                }
+            } else {
+                if (file.setLastModified(System.currentTimeMillis())) {
+                    return "File '" + fileName + "' updated successfully.";
+                } else {
+                    return "Error: Could not update the file '" + fileName + "'.";
+                }
+            }
+        } catch (IOException e) {
+            return "Error: " + e.getMessage();
+        }
+
+        return "Error: Could not create or update the file '" + fileName + "'.";
+    }
+
+
+    /**
+     * Executes a command based on the command tokens provided.
+     *
+     * @param command The command tokens to execute.
+     * @param input   The input from the previous command (if any).
+     * @return The output of the executed command.
+     */
+    public static String executeCommand(String[] command, String input) {
+        String commandInput = String.join(" ", command);
+        driverProgram.parseCommand(commandInput);
+        return "";
+    }
+
+    /**
+     * Executes a series of commands separated by pipes ("|").
+     * Each command is processed in order, and the output of each
+     * command is displayed to the user.
+     *
+     * @param input A string of commands separated by pipes.
+     */
+    public static void handlePipe(String input) {
+        // Use the pipe function to split commands
+        String[] commands = pipe(input);
+        String lastOutput = "";
+
+        for (String command : commands) {
+            String[] tokens = command.trim().split("\\s+");
+            String commandName = tokens[0].toLowerCase();
+            switch (commandName) {
+                case "ls":
+                    lastOutput = cmd.ls(tokens);
+                    break;
+                case "pwd":
+                    lastOutput = cmd.pwd(tokens);
+                    break;
+                case "cat":
+                    lastOutput = cmd.cat(tokens);
+                    break;
+                case "mkdir":
+                    System.out.println(cmd.mkdirCommand(tokens));
+                    lastOutput = "";
+                    break;
+                case "touch":
+                    System.out.println(cmd.touchCommand(tokens));
+                    lastOutput = "";
+                    break;
+                case "cd":
+                    cmd.cd(tokens);
+                    lastOutput = "";
+                    break;
+                case "mv":
+                    cmd.mv(tokens);
+                    lastOutput = "";
+                    break;
+                case "rm":
+                    System.out.println(cmd.rm(tokens));
+                    lastOutput = "";
+                    break;
+                case "rmdir":
+                    System.out.println(cmd.rmdir(tokens));
+                    lastOutput = "";
+                    break;
+                case ">>":
+                    cmd.appendOutputToFile(tokens);
+                    lastOutput = "";
+                    break;
+                case ">":
+                    cmd.forwardArrow(tokens);
+                    lastOutput = "";
+                    break;
+                default:
+                    System.out.println("Unknown command in pipe: " + commandName);
+            }
+        }
+        if (!lastOutput.isEmpty()) {
+            System.out.println(lastOutput);
+        }
+    }
+
+    /**
+     * Splits an input string into commands using the pipe character ("|").
+     *
+     * @param input A string of commands separated by pipes.
+     * @return An array of commands as strings.
+     */
+    public static String[] pipe(String input) {
+        String[] commands = input.split("\\|");
+        List<String> commandList = new ArrayList<>();
+        for (String command : commands) {
+            commandList.add(command.trim());
+        }
+        return commandList.toArray(new String[0]);
     }
 }

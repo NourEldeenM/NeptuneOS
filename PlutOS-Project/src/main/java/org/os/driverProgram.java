@@ -28,11 +28,15 @@ public class driverProgram {
         scanner.close();
     }
 
-    public static String parseCommand(String input) {
+    public static void parseCommand(String input) {
         String[] tokens = input.trim().split("\\s+");
         String command = tokens[0].toLowerCase();
         if (input.contains(">>")) {
             command = ">>";
+        }
+        if (input.contains("|")) {
+            cmd.handlePipe(input);
+            return;
         } else if (input.contains(">")) {
             command = ">";
         }
@@ -67,9 +71,18 @@ public class driverProgram {
                 break;
 //            case "help":
 //                return help(tokens);
+            case "mkdir":
+                cmd.mkdirCommand(tokens);
+                break;
+            case "touch":
+                cmd.touchCommand(tokens);
+                break;
             default:
                 System.out.println("Unknown command: " + command);
         }
         return "";
     }
+
+
 }
+
