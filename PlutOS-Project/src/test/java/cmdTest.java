@@ -290,8 +290,14 @@ public class cmdTest {
             String[] tokens = {"mkdir", dirName};
             String result = cmd.mkdirCommand(tokens);
             String expectedPath = basePath + dirName;
+            System.out.println("Expected Path: " + expectedPath);
+            System.out.println("Actual Result: " + result);
+
             assertEquals("Directory '" + dirName + "' created at " + expectedPath, result);
-            new File(expectedPath).delete();
+
+            File dir = new File(expectedPath);
+            assertTrue(dir.exists(), "Directory should exist");
+            dir.delete();
         }
 
         @Test
