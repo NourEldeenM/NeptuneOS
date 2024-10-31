@@ -370,7 +370,12 @@ public class cmdTest {
             assertTrue(new File(System.getProperty("user.dir"), "testDir").exists());
             assertTrue(new File(System.getProperty("user.dir"), TEST_FILE_NAME).exists());
         }
-
+        @Test
+        public void testPipeCommandWithPwd(){
+            String input = "pwd";
+            cmd.handlePipe(input);
+            assertEquals(System.getProperty("user.dir"),cmd.pwd());
+        }
         // add more pipe tests
         @Test
         public void testPipeCommandWithInvalidCommand() {
