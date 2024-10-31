@@ -499,7 +499,6 @@ public class cmd {
         return "Error: Could not create or update the file '" + fileName + "'.";
     }
 
-   
     /**
      * Executes a series of commands separated by pipes ("|").
      * Each command is processed in order, and the output of each
@@ -511,8 +510,8 @@ public class cmd {
         String[] commands = pipe(input);
         String lastOutput = "";
 
-        for (int i = 0; i < commands.length; i++) {
-            String command = commands[i].trim();
+        for (String s : commands) {
+            String command = s.trim();
             String[] tokens = command.split("\\s+");
             String commandName = tokens[0].toLowerCase();
 
@@ -546,6 +545,7 @@ public class cmd {
             System.out.println(lastOutput);
         }
     }
+
     /**
      * Filters lines from the input that contain the specified pattern.
      * This method is used to display only matching lines from previous command outputs.

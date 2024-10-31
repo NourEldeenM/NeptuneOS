@@ -5,12 +5,10 @@ import java.util.Scanner;
 
 public class driverProgram {
 
-    //    Style text with white color
     private static String whiteText() {
         return "\u001B[37m" + " $ " + "\u001B[0m";
     }
 
-    //    style text with blue text
     private static String blueText(String s) {
         return "\u001B[34m" + s + "\u001B[0m";
     }
