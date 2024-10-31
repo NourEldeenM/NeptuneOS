@@ -500,19 +500,6 @@ public class cmd {
     }
 
     /**
-     * Executes a command based on the command tokens provided.
-     *
-     * @param command The command tokens to execute.
-     * @param input   The input from the previous command (if any).
-     * @return The output of the executed command.
-     */
-    public static String executeCommand(String[] command, String input) {
-        String commandInput = String.join(" ", command);
-        driverProgram.parseCommand(commandInput);
-        return "";
-    }
-
-    /**
      * Executes a series of commands separated by pipes ("|").
      * Each command is processed in order, and the output of each
      * command is displayed to the user.
