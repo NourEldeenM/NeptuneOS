@@ -583,12 +583,13 @@ public class cmd {
      *
      * @param input A string of commands separated by pipes.
      */
+    
     public static void handlePipe(String input) {
         String[] commands = pipe(input);
         String lastOutput = "";
 
-        for (String s : commands) {
-            String command = s.trim();
+        for (int i = 0; i < commands.length; i++) {
+            String command = commands[i].trim();
             String[] tokens = command.split("\\s+");
             String commandName = tokens[0].toLowerCase();
 
@@ -603,7 +604,7 @@ public class cmd {
                     lastOutput = cmd.cat(tokens);
                     break;
                 case "grep":
-                    lastOutput = cmd.grep(tokens, lastOutput);
+                    lastOutput = cmd.grep(tokens, lastOutput); // Using output from the previous command
                     break;
                 case "mkdir":
                     System.out.println(cmd.mkdirCommand(tokens));
@@ -615,11 +616,16 @@ public class cmd {
                     break;
                 default:
                     System.out.println("Unknown command in pipe: " + commandName);
+                    lastOutput = "";
+                    break;
             }
-        }
-        // Print the last output if it's not empty
-        if (!lastOutput.isEmpty()) {
-            System.out.println(lastOutput);
+
+            // Print output after each command (if applicable)
+            if (commandName.equals("ls") || commandName.equals("pwd") || commandName.equals("cat") || commandName.equals("grep")) {
+                if (!lastOutput.isEmpty()) {
+                    System.out.println(lastOutput);
+                }
+            }
         }
     }
 
@@ -693,9 +699,20 @@ public class cmd {
                 8. ls [options] [path]
                    Lists the contents of the specified directory.
                    Options: '-a' to include hidden files, '-r' for recursive listing.
+                   
+                9. mkdir [directory] [path (or default path if not provided)]
+                    checks if a path is given, or performs the operations in the current project directory
+                    checks if there's already a directory in the specified path with the specified name
+                    creates directory
+                    
+                10. touch [file]
+                    Creates a new empty file or updates the timestamp of an existing file.
+                                   
+                11. pipe [command1 | command2 | ...]
+                    Executes a series of commands separated by pipes. Each command's output is passed to the next command.
                 
-                9. help
-                   Displays this help information for all commands.
+                12. help
+                    Displays this help information for all commands.
                 """;
     }
 
