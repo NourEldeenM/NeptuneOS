@@ -84,7 +84,7 @@ public class driverProgram {
                 cmd.touchCommand(tokens);
                 break;
             default:
-                output = "Error: Unknown command" + command;
+                output = "Error: Unknown command: " + command;
         }
 
         if (output != null && !output.isEmpty()) {
